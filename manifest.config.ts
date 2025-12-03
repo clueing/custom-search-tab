@@ -21,6 +21,8 @@ export default defineManifest({
   permissions: [
     'sidePanel',
     'contentSettings',
+  ],
+  host_permissions: [
     "https://suggestion.baidu.com/*",
   ],
   side_panel: {
