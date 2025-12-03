@@ -112,6 +112,7 @@ const fetchAndUpdateWallpaper = async () => {
 }
 
 onMounted(async () => {
+  document.title = '简单搜索'
   const today = getTodayDateString()
   const cache = getWallpaperCache()
 
