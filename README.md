@@ -1,52 +1,45 @@
-# Vue 3 + Vite + CRXJS
+# 简单搜索 - 自定义新标签页 Chrome 扩展
 
-This template helps you quickly start developing Chrome extensions with Vue 3, TypeScript and Vite. It includes the CRXJS Vite plugin for seamless Chrome extension development.
+这是一个基于 Vue 3、TypeScript 和 Vite 构建的 Chrome 扩展，提供了自定义的新标签页功能，包括必应每日壁纸、多搜索引擎支持和快捷方式管理。
 
-## Features
+## 功能特性
 
-- Vue 3 with `<script setup>` syntax
-- TypeScript support
-- Vite build tool
-- CRXJS Vite plugin integration
-- Chrome extension manifest configuration
+- 🌅 **必应每日壁纸** - 自动获取必应每日壁纸作为新标签页背景
+- 🔍 **多搜索引擎** - 支持必应、谷歌、百度等多种搜索引擎切换
+- ⌨️ **搜索建议** - 提供实时搜索建议功能
+- 🚀 **快捷方式管理** - 可自定义添加、编辑、删除常用网站快捷方式
+- 🎨 **响应式设计** - 适配不同屏幕尺寸
+- 🧩 **Chrome 扩展** - 基于 Manifest V3 标准构建
 
-## Quick Start
+## 技术栈
 
-1. Install dependencies:
+- Vue 3 with `<script setup>` 语法
+- TypeScript
+- Vite 构建工具
+- CRXJS Vite 插件集成
+- UnoCSS 样式框架
+- VueUse 工具库
 
+## 快速开始
+
+1. 安装依赖:
 ```bash
-npm install
+pnpm install
 ```
 
-2. Start development server:
-
+2. 启动开发服务器:
 ```bash
-npm run dev
+pnpm run dev
 ```
 
-3. Open Chrome and navigate to `chrome://extensions/`, enable "Developer mode", and load the unpacked extension from the `dist` directory.
+3. 在 Chrome 浏览器中加载扩展:
+  - 打开 Chrome 浏览器
+  - 打开 chrome://extensions/
+  - 开启"开发者模式"
+  - 点击"加载已解压的扩展程序"
+  - 选择项目中的 dist 目录
 
-4. Build for production:
-
+4. 生产环境构建:
 ```bash
-npm run build
+pnpm run build
 ```
-
-## Project Structure
-
-- `src/popup/` - Extension popup UI
-- `src/content/` - Content scripts
-- `manifest.config.ts` - Chrome extension manifest configuration
-
-## Documentation
-
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [CRXJS Documentation](https://crxjs.dev/vite-plugin)
-
-## Chrome Extension Development Notes
-
-- Use `manifest.config.ts` to configure your extension
-- The CRXJS plugin automatically handles manifest generation
-- Content scripts should be placed in `src/content/`
-- Popup UI should be placed in `src/popup/`
