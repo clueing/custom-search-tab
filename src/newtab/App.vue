@@ -1,8 +1,20 @@
 <script setup lang="ts">
+import { getBingWallpaper } from 'bing-wallpaper-api';
+import { onMounted, ref } from 'vue';
+
+// 背景图片 URL
+const backgroundImageUrl = ref('')
+
+onMounted(async () => {
+  // 异步获取今日壁纸
+  const todayWallpaper = await getBingWallpaper();
+  backgroundImageUrl.value = todayWallpaper.url;
+  console.log('今日壁纸链接:', todayWallpaper.url);
+})
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center pt-80">
+  <div class="min-h-screen flex flex-col items-center pt-80" :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
     <!-- 搜索区域 -->
     <header class="w-full max-w-2xl px-6">
       <form role="search" class="flex items-center gap-3" onsubmit="return false">

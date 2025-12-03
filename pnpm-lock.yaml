@@ -11,6 +11,9 @@ importers:
       '@unocss/reset':
         specifier: ^66.5.10
         version: 66.5.10
+      bing-wallpaper-api:
+        specifier: ^1.0.17
+        version: 1.0.17
       vue:
         specifier: ^3.5.17
         version: 3.5.25(typescript@5.8.3)
@@ -596,6 +599,9 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
+  bing-wallpaper-api@1.0.17:
+    resolution: {integrity: sha512-iuh1stdwMEloUQjsYaNAaqMK42YmxXmGArO/3XvbAOPu+IIT6AQjKt+GPksxUN1HwCCtyI2syNILweWYEEXXwA==}
+
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
 
@@ -647,6 +653,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  dayjs@1.11.19:
+    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -1629,6 +1638,10 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
+  bing-wallpaper-api@1.0.17:
+    dependencies:
+      dayjs: 1.11.19
+
   boolbase@1.0.0: {}
 
   braces@3.0.3:
@@ -1698,6 +1711,8 @@ snapshots:
   css-what@6.2.2: {}
 
   csstype@3.2.3: {}
+
+  dayjs@1.11.19: {}
 
   debug@4.4.3:
     dependencies:
