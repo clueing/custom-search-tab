@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 
         <!-- 编辑对话框 -->
         <Transition name="modal">
-            <div v-if="showEditModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            <div v-if="showEditModal" class="z-101 fixed inset-0 bg-black/50 flex items-center justify-center p-4"
                 @click.self="closeEditModal">
                 <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
                     <h2 class="text-xl font-bold mb-4">{{ editingShortcut ? '编辑快捷方式' : '添加快捷方式' }}</h2>

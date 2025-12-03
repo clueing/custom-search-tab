@@ -203,7 +203,7 @@ onUnmounted(() => {
             <!-- 引擎选择下拉列表 -->
             <Transition name="fade">
                 <div v-if="showDrop"
-                    class="absolute top-16 left-0 w-full max-h-60 overflow-y-auto rounded-2xl bg-white shadow-xl p-3 grid grid-cols-4 gap-3">
+                    class="z-99 absolute top-16 left-0 w-full max-h-60 overflow-y-auto rounded-2xl bg-white shadow-xl p-3 grid grid-cols-4 gap-3">
                     <div v-for="e in searchEngines" :key="e.id" @click="activeId = e.id; showDrop = false"
                         class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
                         <img :src="e.icon" class="w-8 h-8 object-contain" draggable="false" />
@@ -215,7 +215,7 @@ onUnmounted(() => {
             <!-- 搜索建议列表 -->
             <Transition name="fade">
                 <div v-if="showSuggestions && suggestions.length > 0"
-                    class="absolute top-16 left-0 w-full rounded-2xl bg-white shadow-xl py-2">
+                    class="z-100 absolute top-16 left-0 w-full rounded-2xl bg-white shadow-xl py-2">
                     <div v-for="(suggestion, index) in suggestions" :key="index" @click="selectSuggestion(suggestion)"
                         @mouseenter="selectedIndex = index" :class="[
                             'px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3',
