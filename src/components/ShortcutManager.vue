@@ -45,12 +45,68 @@ const loadShortcuts = () => {
                 },
                 {
                     id: '2',
-                    url: 'https://github.com',
-                    title: 'GitHub',
-                    icon: 'https://github.githubassets.com/favicons/favicon.svg',
+                    url: 'https://www.bilibili.com',
+                    title: '哔哩哔哩',
+                    icon: 'https://www.bilibili.com/favicon.ico',
                     iconType: 'url',
                     bgColor: '#3b82f6'
-                }
+                },
+                {
+                    id: '3',
+                    url: 'https://www.zhihu.com',
+                    title: '知乎',
+                    icon: 'https://www.zhihu.com/favicon.ico',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '4',
+                    url: 'https://github.com',
+                    title: 'GitHub',
+                    icon: 'https://github.com/favicon.ico',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '5',
+                    url: 'https://mail.google.com',
+                    title: 'Gmail',
+                    icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '5',
+                    url: 'https://www.kimi.com',
+                    title: 'Kimi',
+                    icon: 'https://www.kimi.com/favicon.ico',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '6',
+                    url: 'https://www.doubao.com',
+                    title: '豆包',
+                    icon: 'https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/chat/favicon.png',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '7',
+                    url: 'https://chat.deepseek.com',
+                    title: 'DeepSeek',
+                    icon: 'https://chat.deepseek.com/favicon.svg',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
+                {
+                    id: '8',
+                    url: 'https://claude.ai',
+                    title: 'Claude',
+                    icon: 'https://claude.ai/favicon.ico',
+                    iconType: 'url',
+                    bgColor: '#3b82f6'
+                },
             ]
             saveShortcuts()
         }

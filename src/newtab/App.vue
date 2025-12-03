@@ -3,6 +3,8 @@ import SearchBar from '@/components/SearchBar.vue'
 import ShortcutManager from '@/components/ShortcutManager.vue'
 import { onMounted, ref } from 'vue';
 
+// const currentYear = ref(new Date().getFullYear())
+
 // 背景图片 URL
 const backgroundImageUrl = ref('')
 
@@ -113,6 +115,7 @@ const fetchAndUpdateWallpaper = async () => {
 }
 
 onMounted(async () => {
+  document.title = '简单搜索'
   const today = getTodayDateString()
   const cache = getWallpaperCache()
 
@@ -146,9 +149,9 @@ onMounted(async () => {
     </main>
 
     <!-- 页脚（可选） -->
-    <footer class="mt-auto py-6 text-3 text-#999">
-      © 2025 My Simple Search
-    </footer>
+    <!-- <footer class="mt-auto py-6 text-3 text-[#dddddd]">
+      © {{ currentYear }} 简单搜索
+    </footer> -->
   </div>
 </template>
 
