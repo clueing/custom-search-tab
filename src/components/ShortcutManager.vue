@@ -2,20 +2,21 @@
 import AddIcon from '@/assets/icon/ProiconsAdd.svg'
 import EditIcon from '@/assets/icon/MaterialSymbolsEdit.svg'
 import DeleteIcon from '@/assets/icon/MaterialSymbolsDeleteOutline.svg'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 interface Shortcut {
     id: string
     url: string
     title: string
-    icon: string // 可以是URL或文字
-    iconType: 'url' | 'text' // 图标类型
-    bgColor: string // 背景色（仅文字图标使用）
+    icon: string
+    iconType: 'url' | 'text'
+    bgColor: string
 }
 
 const shortcuts = ref<Shortcut[]>([])
 const showEditModal = ref(false)
 const editingShortcut = ref<Shortcut | null>(null)
+const activeShortcutId = ref<string | null>(null) // 当前显示操作按钮的快捷方式ID
 
 // 表单数据
 const form = ref({
@@ -33,7 +34,6 @@ const loadShortcuts = () => {
         if (saved) {
             shortcuts.value = JSON.parse(saved)
         } else {
-            // 默认快捷方式
             shortcuts.value = [
                 {
                     id: '1',
@@ -78,15 +78,39 @@ const getFaviconUrl = (url: string): string => {
     }
 }
 
-// 获取网站标题（模拟，实际需要后端支持）
+// 获取网站标题
 const fetchSiteTitle = async (url: string): Promise<string> => {
     try {
-        // 由于CORS限制，浏览器插件环境可能需要特殊处理
-        // 这里提供一个简单的实现
         const domain = new URL(url).hostname
         return domain.replace('www.', '')
     } catch {
         return '未命名'
+    }
+}
+
+// 处理右键事件
+const handleRightClick = (event: MouseEvent, shortcutId: string) => {
+    event.preventDefault() // 阻止默认右键菜单
+
+    // 如果点击的是同一个快捷方式，则切换显示状态
+    // 否则显示新的快捷方式的操作按钮
+    if (activeShortcutId.value === shortcutId) {
+        activeShortcutId.value = null
+    } else {
+        activeShortcutId.value = shortcutId
+    }
+}
+
+// 点击空白区域关闭操作按钮
+const handleClickOutside = (event: MouseEvent) => {
+    // 检查是否点击了操作按钮区域
+    const target = event.target as HTMLElement
+    const isEditButton = target.closest('.edit-button, .delete-button')
+    const isShortcutCard = target.closest('.shortcut-card')
+
+    // 如果点击的不是快捷方式卡片也不是操作按钮，则关闭所有操作按钮
+    if (!isShortcutCard && !isEditButton) {
+        activeShortcutId.value = null
     }
 }
 
@@ -112,6 +136,7 @@ const openEditModal = (shortcut?: Shortcut) => {
         }
     }
     showEditModal.value = true
+    activeShortcutId.value = null // 关闭操作按钮
 }
 
 // 自动获取网站信息
@@ -119,19 +144,16 @@ const autoFetchSiteInfo = async () => {
     if (!form.value.url) return
 
     try {
-        // 确保URL格式正确
         let url = form.value.url
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             url = 'https://' + url
             form.value.url = url
         }
 
-        // 获取图标
         const faviconUrl = getFaviconUrl(url)
         form.value.icon = faviconUrl
         form.value.iconType = 'url'
 
-        // 获取标题
         if (!form.value.title) {
             const title = await fetchSiteTitle(url)
             form.value.title = title
@@ -155,7 +177,6 @@ const saveShortcut = () => {
     }
 
     if (editingShortcut.value) {
-        // 编辑现有快捷方式
         const index = shortcuts.value.findIndex(s => s.id === editingShortcut.value!.id)
         if (index !== -1) {
             shortcuts.value[index] = {
@@ -164,7 +185,6 @@ const saveShortcut = () => {
             }
         }
     } else {
-        // 添加新快捷方式
         shortcuts.value.push({
             id: Date.now().toString(),
             ...form.value
@@ -180,6 +200,7 @@ const deleteShortcut = (id: string) => {
     if (confirm('确定要删除这个快捷方式吗？')) {
         shortcuts.value = shortcuts.value.filter(s => s.id !== id)
         saveShortcuts()
+        activeShortcutId.value = null // 关闭操作按钮
     }
 }
 
@@ -189,8 +210,15 @@ const closeEditModal = () => {
     editingShortcut.value = null
 }
 
+// 组件挂载时添加全局点击监听
 onMounted(() => {
     loadShortcuts()
+    document.addEventListener('click', handleClickOutside)
+})
+
+// 组件卸载时移除监听
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -199,9 +227,11 @@ onMounted(() => {
         <ul class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             <!-- 快捷方式卡片 -->
             <li v-for="shortcut in shortcuts" :key="shortcut.id" class="flex flex-col items-center gap-2 group">
-                <div class="relative">
+                <div class="relative shortcut-card">
+                    <!-- 快捷方式链接 -->
                     <a :href="shortcut.url" target="_blank" rel="noopener"
-                        class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-md flex items-center justify-center overflow-hidden">
+                        @contextmenu="(e) => handleRightClick(e, shortcut.id)"
+                        class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-md flex items-center justify-center overflow-hidden cursor-pointer">
                         <!-- 图标类型：URL -->
                         <img v-if="shortcut.iconType === 'url'" :src="shortcut.icon" class="w-8 h-8 object-contain"
                             @error="(e) => (e.target as HTMLImageElement).style.display = 'none'" draggable="false" />
@@ -211,16 +241,16 @@ onMounted(() => {
                             {{ shortcut.icon }}
                         </div>
                     </a>
-                    <!-- 编辑/删除按钮 -->
-                    <div
-                        class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+
+                    <!-- 编辑/删除按钮（右键显示） -->
+                    <div v-if="activeShortcutId === shortcut.id" class="absolute -top-2 -right-2 flex gap-1 z-10">
                         <button @click="openEditModal(shortcut)"
-                            class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg">
-                            <img class="w-4 h-4" :src="EditIcon" alt="✎" />
+                            class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-transform transform hover:scale-110">
+                            <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
                         </button>
                         <button @click="deleteShortcut(shortcut.id)"
-                            class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg">
-                            <img class="w-4 h-4" :src="DeleteIcon" alt="⨯" />
+                            class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-transform transform hover:scale-110">
+                            <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
                         </button>
                     </div>
                 </div>
@@ -229,9 +259,9 @@ onMounted(() => {
 
             <!-- 添加按钮 -->
             <li class="flex flex-col items-center gap-2">
-                <button @click="openEditModal()"
+                <button @click="openEditModal()" @click.stop="activeShortcutId = null"
                     class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-md flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors">
-                    <img class="w-5 h-5" :src="AddIcon" alt="+" />
+                    <img class="w-5 h-5" :src="AddIcon" alt="添加" />
                 </button>
                 <span class="text-sm text-[#dddddd]">添加</span>
             </li>
@@ -361,5 +391,22 @@ onMounted(() => {
 .modal-enter-from .bg-white,
 .modal-leave-to .bg-white {
     transform: scale(0.95);
+}
+
+/* 确保操作按钮显示在最上层 */
+.relative {
+    position: relative;
+}
+
+/* 操作按钮的动画效果 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: scale(0.8);
 }
 </style>
