@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SearchBar from '@/components/SearchBar.vue'
 import { getBingWallpaper } from 'bing-wallpaper-api';
 import { onMounted, ref } from 'vue';
 
@@ -14,18 +15,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center pt-80" :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
+  <div class="min-h-screen flex flex-col items-center pt-60" :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
     <!-- 搜索区域 -->
     <header class="w-full max-w-2xl px-6">
-      <form role="search" class="flex items-center gap-3" onsubmit="return false">
-        <label class="sr-only" for="search">搜索</label>
-        <input id="search" type="search" placeholder="请输入关键词"
-          class="flex-1 h-12 px-4 rounded-full border-1 border-#ddd bg-white shadow-sm focus:outline-none focus:border-blue-500" />
-        <button type="submit"
-          class="h-12 px-6 rounded-full bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800">
-          搜索
-        </button>
-      </form>
+      <!-- 搜索 -->
+      <SearchBar class="w-full" />
     </header>
 
     <!-- 快捷方式 -->
