@@ -8,16 +8,18 @@ export default defineManifest({
   icons: {
     48: 'public/logo.png',
   },
-  action: {
-    default_icon: {
-      48: 'public/logo.png',
-    },
-    default_popup: 'src/popup/index.html',
-  },
-  content_scripts: [{
-    js: ['src/content/main.ts'],
-    matches: ['https://*/*'],
-  }],
+  // 工具栏点击面板
+  // action: {
+  //   default_icon: {
+  //     48: 'public/logo.png',
+  //   },
+  //   default_popup: 'src/popup/index.html',
+  // },
+  // 页面悬浮球
+  // content_scripts: [{
+  //   js: ['src/content/main.ts'],
+  //   matches: ['https://*/*'],
+  // }],
   permissions: [
     'sidePanel',
     'contentSettings',
