@@ -7,6 +7,7 @@ import { onMounted, ref } from 'vue';
 const backgroundImageUrl = ref('')
 
 onMounted(async () => {
+  document.title = '简单搜索';  // 设置页面标题
   // 异步获取今日壁纸
   const todayWallpaper = await getBingWallpaper();
   backgroundImageUrl.value = todayWallpaper.url;
@@ -49,9 +50,9 @@ onMounted(async () => {
     </main>
 
     <!-- 页脚（可选） -->
-    <footer class="mt-auto py-6 text-3 text-#999">
+    <!-- <footer class="mt-auto py-6 text-3 text-#999">
       © 2025 My Simple Search
-    </footer>
+    </footer> -->
   </div>
 </template>
 

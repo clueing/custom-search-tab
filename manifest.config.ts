@@ -21,6 +21,7 @@ export default defineManifest({
   permissions: [
     'sidePanel',
     'contentSettings',
+    "https://suggestion.baidu.com/*",
   ],
   side_panel: {
     default_path: 'src/sidepanel/index.html',
