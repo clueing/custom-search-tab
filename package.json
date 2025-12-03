@@ -8,6 +8,7 @@
     "build": "vue-tsc -b && vite build"
   },
   "dependencies": {
+    "@unocss/reset": "^66.5.10",
     "vue": "^3.5.17"
   },
   "devDependencies": {
