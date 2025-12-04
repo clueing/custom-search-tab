@@ -76,7 +76,7 @@ const loadShortcuts = () => {
                     bgColor: '#3b82f6'
                 },
                 {
-                    id: '5',
+                    id: '6',
                     url: 'https://www.kimi.com',
                     title: 'Kimi',
                     icon: 'https://www.kimi.com/favicon.ico',
@@ -84,7 +84,7 @@ const loadShortcuts = () => {
                     bgColor: '#3b82f6'
                 },
                 {
-                    id: '6',
+                    id: '7',
                     url: 'https://www.doubao.com',
                     title: '豆包',
                     icon: 'https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/chat/favicon.png',
@@ -92,7 +92,7 @@ const loadShortcuts = () => {
                     bgColor: '#3b82f6'
                 },
                 {
-                    id: '7',
+                    id: '8',
                     url: 'https://chat.deepseek.com',
                     title: 'DeepSeek',
                     icon: 'https://chat.deepseek.com/favicon.svg',
@@ -100,7 +100,7 @@ const loadShortcuts = () => {
                     bgColor: '#3b82f6'
                 },
                 {
-                    id: '8',
+                    id: '9',
                     url: 'https://claude.ai',
                     title: 'Claude',
                     icon: 'https://claude.ai/favicon.ico',
