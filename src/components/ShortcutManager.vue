@@ -324,107 +324,109 @@ onBeforeUnmount(() => {
         </ul>
 
         <!-- 编辑对话框 -->
-        <Transition name="modal">
-            <div v-if="showEditModal" class="z-101 fixed inset-0 bg-black/50 flex items-center justify-center p-4"
-                @click.self="closeEditModal">
-                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                    <h2 class="text-xl font-bold mb-4">{{ editingShortcut ? '编辑快捷方式' : '添加快捷方式' }}</h2>
+        <Teleport to="body">
+            <Transition name="modal">
+                <div v-if="showEditModal" class="z-200 fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+                    @click.self="closeEditModal">
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <h2 class="text-xl font-bold mb-4">{{ editingShortcut ? '编辑快捷方式' : '添加快捷方式' }}</h2>
 
-                    <div class="space-y-4">
-                        <!-- 网址输入 -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">网址</label>
-                            <div class="flex gap-2">
-                                <input v-model="form.url" type="text" placeholder="https://example.com"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                <button @click="autoFetchSiteInfo"
-                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                    获取
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 标题输入 -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">标题</label>
-                            <input v-model="form.title" type="text" placeholder="网站名称"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        <!-- 图标类型选择 -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">图标类型</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input v-model="form.iconType" type="radio" value="url" class="w-4 h-4" />
-                                    <span>图标URL</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input v-model="form.iconType" type="radio" value="text" class="w-4 h-4"
-                                        @change="switchToTextIcon" />
-                                    <span>文字图标</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 图标URL输入 -->
-                        <div v-if="form.iconType === 'url'">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">图标URL</label>
-                            <input v-model="form.icon" type="text" placeholder="https://example.com/icon.png"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        <!-- 文字图标设置 -->
-                        <div v-else class="space-y-3">
+                        <div class="space-y-4">
+                            <!-- 网址输入 -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">文字内容（最多2个字）</label>
-                                <input v-model="form.icon" type="text" maxlength="2" placeholder="如：掘金"
+                                <label class="block text-sm font-medium text-gray-700 mb-1">网址</label>
+                                <div class="flex gap-2">
+                                    <input v-model="form.url" type="text" placeholder="https://example.com"
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    <button @click="autoFetchSiteInfo"
+                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap">
+                                        获取
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 标题输入 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">标题</label>
+                                <input v-model="form.title" type="text" placeholder="网站名称"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
+
+                            <!-- 图标类型选择 -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">背景颜色</label>
-                                <div class="flex gap-2">
-                                    <input v-model="form.bgColor" type="color"
-                                        class="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer" />
-                                    <input v-model="form.bgColor" type="text"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">图标类型</label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input v-model="form.iconType" type="radio" value="url" class="w-4 h-4" />
+                                        <span>图标URL</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input v-model="form.iconType" type="radio" value="text" class="w-4 h-4"
+                                            @change="switchToTextIcon" />
+                                        <span>文字图标</span>
+                                    </label>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- 预览 -->
-                        <div class="border-t pt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">预览</label>
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-14 h-14 rounded-2xl bg-white shadow flex items-center justify-center overflow-hidden">
-                                    <img v-if="form.iconType === 'url' && form.icon" :src="form.icon"
-                                        class="w-8 h-8 object-contain" draggable="false" />
-                                    <div v-else-if="form.iconType === 'text' && form.icon"
-                                        class="w-full h-full flex items-center justify-center text-white font-bold text-lg"
-                                        :style="{ backgroundColor: form.bgColor }">
-                                        {{ form.icon }}
+                            <!-- 图标URL输入 -->
+                            <div v-if="form.iconType === 'url'">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">图标URL</label>
+                                <input v-model="form.icon" type="text" placeholder="https://example.com/icon.png"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+
+                            <!-- 文字图标设置 -->
+                            <div v-else class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">文字内容（最多2个字）</label>
+                                    <input v-model="form.icon" type="text" maxlength="2" placeholder="如：掘金"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">背景颜色</label>
+                                    <div class="flex gap-2">
+                                        <input v-model="form.bgColor" type="color"
+                                            class="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer" />
+                                        <input v-model="form.bgColor" type="text"
+                                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
                                 </div>
-                                <span class="text-sm text-gray-700">{{ form.title || '标题' }}</span>
+                            </div>
+
+                            <!-- 预览 -->
+                            <div class="border-t pt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">预览</label>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-14 h-14 rounded-2xl bg-white shadow flex items-center justify-center overflow-hidden">
+                                        <img v-if="form.iconType === 'url' && form.icon" :src="form.icon"
+                                            class="w-8 h-8 object-contain" draggable="false" />
+                                        <div v-else-if="form.iconType === 'text' && form.icon"
+                                            class="w-full h-full flex items-center justify-center text-white font-bold text-lg"
+                                            :style="{ backgroundColor: form.bgColor }">
+                                            {{ form.icon }}
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-gray-700">{{ form.title || '标题' }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 按钮 -->
-                    <div class="flex gap-3 mt-6">
-                        <button @click="closeEditModal"
-                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                            取消
-                        </button>
-                        <button @click="saveShortcut"
-                            class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                            保存
-                        </button>
+                        <!-- 按钮 -->
+                        <div class="flex gap-3 mt-6">
+                            <button @click="closeEditModal"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                取消
+                            </button>
+                            <button @click="saveShortcut"
+                                class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                保存
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Transition>
+            </Transition>
+        </Teleport>
     </section>
 </template>
 

@@ -136,15 +136,15 @@ onMounted(async () => {
   <div class="min-h-screen flex flex-col items-center pt-60 bg-cover bg-center relative"
     :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
     <!-- 暗色遮罩层 -->
-    <div class="absolute inset-0 bg-black/15 -z-10"></div>
+    <div class="absolute inset-0 bg-black/25 z-10"></div>
     <!-- 搜索区域 -->
-    <header class="w-full max-w-2xl px-6">
+    <header class="w-full max-w-2xl px-6 z-30">
       <!-- 搜索 -->
       <SearchBar class="w-full" />
     </header>
 
     <!-- 快捷方式 -->
-    <main class="w-full max-w-5xl px-6 mt-12">
+    <main class="w-full max-w-5xl px-6 mt-12 z-20">
       <ShortcutManager />
     </main>
 
