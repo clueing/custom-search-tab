@@ -215,7 +215,7 @@ onUnmounted(() => {
             <!-- 搜索建议列表 -->
             <Transition name="fade">
                 <div v-if="showSuggestions && suggestions.length > 0"
-                    class="z-100 absolute top-16 left-0 w-full rounded-2xl bg-white shadow-xl py-2">
+                    class="z-100 overflow-hidden absolute top-16 left-0 w-full rounded-2xl bg-white shadow-xl py-2">
                     <div v-for="(suggestion, index) in suggestions" :key="index" @click="selectSuggestion(suggestion)"
                         @mouseenter="selectedIndex = index" :class="[
                             'px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3',
