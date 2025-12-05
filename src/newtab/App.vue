@@ -109,7 +109,7 @@ const fetchAndUpdateWallpaper = async () => {
     } else {
       console.warn('没有可用的壁纸缓存')
       // 可以设置一个默认壁纸
-      backgroundImageUrl.value = 'https://source.unsplash.com/random/1920x1080'
+      backgroundImageUrl.value = 'https://www.bing.com/th?id=OHR.CopanRuins_ZH-CN2157795324_1920x1080.jpg'
     }
   }
 }
