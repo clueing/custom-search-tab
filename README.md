@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.png" width="88" alt="简单搜索 Logo" />
+</p>
+
 # 简单搜索 - 自定义新标签页 Chrome 扩展
 
 这是一个基于 Vue 3、TypeScript 和 Vite 构建的 Chrome 扩展，提供了自定义的新标签页功能，包括必应每日壁纸、多搜索引擎支持和快捷方式管理。
