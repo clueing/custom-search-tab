@@ -1,46 +1,30 @@
 <script setup lang="ts">
-import type { SearchEngine } from '@/types/search'
 import CloseIcon from '@/assets/icon/IonClose.svg'
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { useSearchEngines } from '@/composables/useSearchEngines'
 
-const searchEngines: SearchEngine[] = [
-    {
-        id: 1,
-        name: '必应',
-        icon: 'https://rewards.bing.com/rewardscdn/images/rewards/membercenter/missions/Animated-Icons/bing_icon.svg',
-        searchUrl: (kw: string) => `https://www.bing.com/search?q=${encodeURIComponent(kw)}`,
-        suggestUrl: (kw: string) => `https://suggestion.baidu.com/su?p=3&ie=UTF-8&wd=${encodeURIComponent(kw)}`,
-    },
-    {
-        id: 2,
-        name: '谷歌',
-        icon: 'https://www.google.com/favicon.ico',
-        searchUrl: (kw: string) => `https://www.google.com/search?q=${encodeURIComponent(kw)}`,
-        suggestUrl: (kw: string) => `https://suggestion.baidu.com/su?p=3&ie=UTF-8&wd=${encodeURIComponent(kw)}`,
-    },
-    {
-        id: 3,
-        name: '百度',
-        icon: 'https://www.baidu.com/favicon.ico',
-        searchUrl: (kw: string) => `https://www.baidu.com/s?wd=${encodeURIComponent(kw)}`,
-        suggestUrl: (kw: string) => `https://suggestion.baidu.com/su?p=3&ie=UTF-8&wd=${encodeURIComponent(kw)}`,
-    },
-]
+// 使用搜索引擎状态管理
+const { engines, currentEngine, activeEngineId, setActiveEngine, suggestEnabled, init } = useSearchEngines()
+
+// 初始化
+init()
 
 const keyword = ref('')
 const showDrop = ref(false)
 const showSuggestions = ref(false)
-const activeId = ref(1)
 const suggestions = ref<string[]>([])
 const selectedIndex = ref(-1)
 
-const currentEngine = computed<SearchEngine>(
-    () => searchEngines.find(e => e.id === activeId.value) || searchEngines[0]
-)
-
 // 获取搜索建议
 const fetchSuggestions = async (kw: string) => {
+    // 检查搜索建议开关
+    if (!suggestEnabled.value) {
+        suggestions.value = []
+        showSuggestions.value = false
+        return
+    }
+
     if (!kw.trim() || !currentEngine.value.suggestUrl) {
         suggestions.value = []
         showSuggestions.value = false
@@ -151,7 +135,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 // 切换引擎时清空建议
-watch(activeId, () => {
+watch(activeEngineId, () => {
     suggestions.value = []
     showSuggestions.value = false
     selectedIndex.value = -1
@@ -204,7 +188,7 @@ onUnmounted(() => {
             <Transition name="fade">
                 <div v-if="showDrop"
                     class="z-99 absolute top-16 left-0 w-full max-h-60 overflow-y-auto rounded-2xl bg-white shadow-xl p-3 grid grid-cols-4 gap-3">
-                    <div v-for="e in searchEngines" :key="e.id" @click="activeId = e.id; showDrop = false"
+                    <div v-for="e in engines" :key="e.id" @click="setActiveEngine(e.id); showDrop = false"
                         class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
                         <img :src="e.icon" class="w-8 h-8 object-contain" draggable="false" />
                         <span class="text-xs text-gray-700">{{ e.name }}</span>
