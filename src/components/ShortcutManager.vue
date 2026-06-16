@@ -16,7 +16,7 @@ interface Shortcut {
 const shortcuts = ref<Shortcut[]>([])
 const showEditModal = ref(false)
 const editingShortcut = ref<Shortcut | null>(null)
-const activeShortcutId = ref<string | null>(null) // 当前显示操作按钮的快捷方式ID
+const columns = ref<number>(8) // 默认 8 列
 
 // 表单数据
 const form = ref({
@@ -145,32 +145,6 @@ const fetchSiteTitle = async (url: string): Promise<string> => {
     }
 }
 
-// 处理右键事件
-const handleRightClick = (event: MouseEvent, shortcutId: string) => {
-    event.preventDefault() // 阻止默认右键菜单
-
-    // 如果点击的是同一个快捷方式，则切换显示状态
-    // 否则显示新的快捷方式的操作按钮
-    if (activeShortcutId.value === shortcutId) {
-        activeShortcutId.value = null
-    } else {
-        activeShortcutId.value = shortcutId
-    }
-}
-
-// 点击空白区域关闭操作按钮
-const handleClickOutside = (event: MouseEvent) => {
-    // 检查是否点击了操作按钮区域
-    const target = event.target as HTMLElement
-    const isEditButton = target.closest('.edit-button, .delete-button')
-    const isShortcutCard = target.closest('.shortcut-card')
-
-    // 如果点击的不是快捷方式卡片也不是操作按钮，则关闭所有操作按钮
-    if (!isShortcutCard && !isEditButton) {
-        activeShortcutId.value = null
-    }
-}
-
 // 打开编辑对话框
 const openEditModal = (shortcut?: Shortcut) => {
     if (shortcut) {
@@ -193,7 +167,6 @@ const openEditModal = (shortcut?: Shortcut) => {
         }
     }
     showEditModal.value = true
-    activeShortcutId.value = null // 关闭操作按钮
 }
 
 // 自动获取网站信息
@@ -257,7 +230,6 @@ const deleteShortcut = (id: string) => {
     if (confirm('确定要删除这个快捷方式吗？')) {
         shortcuts.value = shortcuts.value.filter(s => s.id !== id)
         saveShortcuts()
-        activeShortcutId.value = null // 关闭操作按钮
     }
 }
 
@@ -270,24 +242,49 @@ const closeEditModal = () => {
 // 组件挂载时添加全局点击监听
 onMounted(() => {
     loadShortcuts()
-    document.addEventListener('click', handleClickOutside)
+
+    // 加载布局设置
+    try {
+        const stored = localStorage.getItem('shortcut_columns')
+        if (stored) {
+            columns.value = Number(stored)
+        }
+    } catch (error) {
+        console.error('加载布局设置失败:', error)
+    }
+
+    // 监听布局变化事件
+    const handleLayoutChange = (e: Event) => {
+        const customEvent = e as CustomEvent
+        columns.value = customEvent.detail
+    }
+    window.addEventListener('shortcut-layout-change', handleLayoutChange)
+
+    // 保存监听器引用以便清理
+    ;(window as any).__shortcutLayoutHandler = handleLayoutChange
 })
 
 // 组件卸载时移除监听
 onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickOutside)
+    const handler = (window as any).__shortcutLayoutHandler
+    if (handler) {
+        window.removeEventListener('shortcut-layout-change', handler)
+        delete (window as any).__shortcutLayoutHandler
+    }
 })
 </script>
 
 <template>
     <section aria-label="快捷方式">
-        <ul class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+        <ul :class="[
+            'grid gap-4',
+            `grid-cols-2 sm:grid-cols-4 md:grid-cols-${columns}`
+        ]">
             <!-- 快捷方式卡片 -->
             <li v-for="shortcut in shortcuts" :key="shortcut.id" class="flex flex-col items-center gap-2 group">
                 <div class="relative shortcut-card">
                     <!-- 快捷方式链接 -->
                     <a :href="shortcut.url" target="_blank" rel="noopener"
-                        @contextmenu="(e) => handleRightClick(e, shortcut.id)"
                         class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-lg hover:scale-110 active:scale-95 flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-200">
                         <!-- 图标类型：URL -->
                         <img v-if="shortcut.iconType === 'url'" :src="shortcut.icon" class="w-8 h-8 object-contain"
@@ -299,26 +296,24 @@ onBeforeUnmount(() => {
                         </div>
                     </a>
 
-                    <!-- 编辑/删除按钮（右键显示） -->
-                    <Transition name="action-buttons">
-                        <div v-if="activeShortcutId === shortcut.id" class="absolute -top-2 -right-2 flex gap-1 z-10">
-                            <button @click="openEditModal(shortcut)"
-                                class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-all hover:scale-110 active:scale-95">
-                                <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
-                            </button>
-                            <button @click="deleteShortcut(shortcut.id)"
-                                class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-all hover:scale-110 active:scale-95">
-                                <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
-                            </button>
-                        </div>
-                    </Transition>
+                    <!-- 编辑/删除按钮（hover 显示） -->
+                    <div class="absolute -top-2 -right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button @click.prevent="openEditModal(shortcut)"
+                            class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                            <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
+                        </button>
+                        <button @click.prevent="deleteShortcut(shortcut.id)"
+                            class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                            <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
+                        </button>
+                    </div>
                 </div>
                 <span class="text-sm text-[#dddddd] group-hover:text-white transition-colors">{{ shortcut.title }}</span>
             </li>
 
             <!-- 添加按钮 -->
             <li class="flex flex-col items-center gap-2 group">
-                <button @click="openEditModal()" @click.stop="activeShortcutId = null"
+                <button @click="openEditModal()"
                     class="w-14 h-14 rounded-2xl bg-white/90 shadow hover:shadow-lg hover:scale-110 active:scale-95 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all duration-200 backdrop-blur">
                     <img class="w-5 h-5" :src="AddIcon" alt="添加" />
                 </button>

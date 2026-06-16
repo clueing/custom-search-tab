@@ -46,28 +46,28 @@ const switchTab = (tab: 'engines' | 'general' | 'about') => {
                     </header>
 
                     <!-- Tab 切换 -->
-                    <nav class="flex border-b border-gray-200 px-6">
+                    <nav class="flex gap-2 px-6 py-4">
                         <button @click="switchTab('engines')" :class="[
-                            'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-all',
                             activeTab === 'engines'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-600 hover:text-gray-800'
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         ]">
                             搜索引擎
                         </button>
                         <button @click="switchTab('general')" :class="[
-                            'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-all',
                             activeTab === 'general'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-600 hover:text-gray-800'
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         ]">
                             通用设置
                         </button>
                         <button @click="switchTab('about')" :class="[
-                            'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-all',
                             activeTab === 'about'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-600 hover:text-gray-800'
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         ]">
                             关于
                         </button>
