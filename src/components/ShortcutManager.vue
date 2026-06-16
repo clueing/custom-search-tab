@@ -2,7 +2,7 @@
 import AddIcon from '@/assets/icon/ProiconsAdd.svg'
 import EditIcon from '@/assets/icon/MaterialSymbolsEdit.svg'
 import DeleteIcon from '@/assets/icon/MaterialSymbolsDeleteOutline.svg'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
 interface Shortcut {
     id: string
@@ -17,6 +17,17 @@ const shortcuts = ref<Shortcut[]>([])
 const showEditModal = ref(false)
 const editingShortcut = ref<Shortcut | null>(null)
 const columns = ref<number>(8) // 默认 8 列
+
+// 计算网格类名
+const gridClass = computed(() => {
+    const colsMap: Record<number, string> = {
+        4: 'lg:grid-cols-4',
+        6: 'lg:grid-cols-6',
+        8: 'lg:grid-cols-8',
+        10: 'lg:grid-cols-10',
+    }
+    return colsMap[columns.value] || 'lg:grid-cols-8'
+})
 
 // 表单数据
 const form = ref({
@@ -276,10 +287,7 @@ onBeforeUnmount(() => {
 
 <template>
     <section aria-label="快捷方式">
-        <ul :class="[
-            'grid gap-4',
-            `grid-cols-2 sm:grid-cols-4 md:grid-cols-${columns}`
-        ]">
+        <ul :class="['grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4', gridClass]">
             <!-- 快捷方式卡片 -->
             <li v-for="shortcut in shortcuts" :key="shortcut.id" class="flex flex-col items-center gap-2 group">
                 <div class="relative shortcut-card">
