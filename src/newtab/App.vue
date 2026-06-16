@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import SearchBar from '@/components/SearchBar.vue'
 import ShortcutManager from '@/components/ShortcutManager.vue'
-import { onMounted, ref } from 'vue';
+import SettingsPanel from '@/components/SettingsPanel.vue'
+import { onMounted, ref } from 'vue'
+
+// 设置面板显示状态
+const showSettings = ref(false)
 
 // const currentYear = ref(new Date().getFullYear())
 
@@ -137,6 +141,13 @@ onMounted(async () => {
     :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
     <!-- 暗色遮罩层 -->
     <div class="absolute inset-0 bg-black/25 z-10"></div>
+
+    <!-- 右上角设置按钮 -->
+    <button @click="showSettings = true"
+      class="fixed top-6 right-6 z-30 w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow hover:shadow-lg transition-all flex items-center justify-center">
+      <span class="i-carbon-settings text-gray-600 text-xl" />
+    </button>
+
     <!-- 搜索区域 -->
     <header class="w-full max-w-2xl px-6 z-30">
       <!-- 搜索 -->
@@ -147,6 +158,9 @@ onMounted(async () => {
     <main class="w-full max-w-5xl px-6 mt-12 z-20">
       <ShortcutManager />
     </main>
+
+    <!-- 设置面板 -->
+    <SettingsPanel v-model:show="showSettings" />
 
     <!-- 页脚（可选） -->
     <!-- <footer class="mt-auto py-6 text-3 text-[#dddddd]">
