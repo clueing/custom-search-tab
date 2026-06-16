@@ -1,0 +1,29 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 背景渐变：呼应每日壁纸的天空氛围 -->
+    <linearGradient id="bg" x1="8" y1="8" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <!-- 镜片裁剪区 -->
+    <clipPath id="lens">
+      <circle cx="54" cy="54" r="26"/>
+    </clipPath>
+  </defs>
+
+  <!-- 圆角方形背景（新标签页 / 壁纸） -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+
+  <!-- 镜片内极简风景（壁纸隐喻：太阳 + 山） -->
+  <g clip-path="url(#lens)">
+    <rect x="28" y="28" width="52" height="52" fill="#FFFFFF"/>
+    <circle cx="46" cy="46" r="6.5" fill="#FBBF24"/>
+    <path d="M28 80 L80 80 L80 72 L28 72 Z" fill="#93C5FD"/>
+    <path d="M28 72 L48 50 L60 62 L72 52 L80 72 Z" fill="#3B82F6"/>
+  </g>
+
+  <!-- 放大镜镜圈（搜索） -->
+  <circle cx="54" cy="54" r="26" stroke="#FFFFFF" stroke-width="7"/>
+  <!-- 放大镜手柄 -->
+  <line x1="74" y1="74" x2="97" y2="97" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+</svg>
