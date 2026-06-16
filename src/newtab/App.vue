@@ -174,6 +174,15 @@ const toggleLock = async () => {
   }
 }
 
+// 校验图片 URL 是否可加载（必应旧壁纸 URL 可能已失效）
+const verifyImageLoadable = (url: string) =>
+  new Promise<boolean>((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(true)
+    img.onerror = () => resolve(false)
+    img.src = url
+  })
+
 onMounted(async () => {
   document.title = '简单搜索'
 
@@ -182,6 +191,13 @@ onMounted(async () => {
     // 已锁定：固定显示锁定壁纸，不自动获取最新
     locked.value = true
     current.value = lock
+
+    // 校验锁定壁纸是否仍可访问，失效则回退默认壁纸（仍保持锁定状态）
+    const ok = await verifyImageLoadable(lock.url)
+    if (!ok) {
+      console.warn('锁定壁纸已失效，回退默认壁纸')
+      current.value = { ...lock, url: DEFAULT_WALLPAPER }
+    }
     return
   }
 
