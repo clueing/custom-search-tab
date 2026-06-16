@@ -40,88 +40,9 @@ const form = ref({
     bgColor: '#3b82f6'
 })
 
-// 从本地存储加载快捷方式
+// 从本地存储加载快捷方式（默认为空，不再内置）
 const loadShortcuts = () => {
-    const saved = storage.get<Shortcut[] | null>(STORAGE_KEYS.SHORTCUTS, null)
-    if (saved && saved.length) {
-        shortcuts.value = saved
-    } else {
-        shortcuts.value = [
-                {
-                    id: '1',
-                    url: 'https://outlook.live.com',
-                    title: 'Outlook',
-                    icon: 'https://outlook.live.com/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '2',
-                    url: 'https://www.bilibili.com',
-                    title: '哔哩哔哩',
-                    icon: 'https://www.bilibili.com/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '3',
-                    url: 'https://www.zhihu.com',
-                    title: '知乎',
-                    icon: 'https://www.zhihu.com/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '4',
-                    url: 'https://github.com',
-                    title: 'GitHub',
-                    icon: 'https://github.com/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '5',
-                    url: 'https://mail.google.com',
-                    title: 'Gmail',
-                    icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '6',
-                    url: 'https://www.kimi.com',
-                    title: 'Kimi',
-                    icon: 'https://www.kimi.com/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '7',
-                    url: 'https://www.doubao.com',
-                    title: '豆包',
-                    icon: 'https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/chat/favicon.png',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '8',
-                    url: 'https://chat.deepseek.com',
-                    title: 'DeepSeek',
-                    icon: 'https://chat.deepseek.com/favicon.svg',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-                {
-                    id: '9',
-                    url: 'https://claude.ai',
-                    title: 'Claude',
-                    icon: 'https://claude.ai/favicon.ico',
-                    iconType: 'url',
-                    bgColor: '#3b82f6'
-                },
-            ]
-            saveShortcuts()
-    }
+    shortcuts.value = storage.get<Shortcut[]>(STORAGE_KEYS.SHORTCUTS, [])
 }
 
 // 保存快捷方式到本地存储
@@ -346,11 +267,6 @@ onBeforeUnmount(() => {
                 <span class="text-sm text-[#dddddd] group-hover:text-white transition-colors">添加</span>
             </li>
         </ul>
-
-        <!-- 右键操作提示 -->
-        <p v-if="shortcuts.length" class="mt-6 text-center text-xs text-white/50 select-none">
-            提示：右键快捷方式可编辑或删除
-        </p>
 
         <!-- 编辑对话框 -->
         <Teleport to="body">
