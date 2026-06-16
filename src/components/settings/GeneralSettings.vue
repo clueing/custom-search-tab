@@ -42,6 +42,95 @@ watch(shortcutColumns, saveLayout)
 
 // 初始化
 loadLayout()
+
+// ==================== 配置备份 ====================
+// 需要备份的全部 localStorage 键（不含每日壁纸临时缓存）
+const BACKUP_KEYS = [
+    'search_engines',
+    'active_engine_id',
+    'suggest_enabled',
+    'shortcuts',
+    'shortcut_columns',
+]
+
+// 读取并解析单个配置值（解析失败时回退为原始字符串）
+const readValue = (key: string): unknown => {
+    const raw = localStorage.getItem(key)
+    if (raw === null) return undefined
+    try {
+        return JSON.parse(raw)
+    } catch {
+        return raw
+    }
+}
+
+// 写回单个配置值
+const writeValue = (key: string, value: unknown) => {
+    if (value === undefined || value === null) return
+    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+}
+
+// 导出全部配置
+const exportConfig = () => {
+    const data: Record<string, unknown> = {}
+    for (const key of BACKUP_KEYS) {
+        const value = readValue(key)
+        if (value !== undefined) data[key] = value
+    }
+
+    const config = {
+        version: '1.0',
+        exportTime: new Date().toISOString(),
+        data,
+    }
+
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `simple-search-backup-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+}
+
+// 导入全部配置
+const importConfig = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'application/json'
+    input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0]
+        if (!file) return
+
+        try {
+            const text = await file.text()
+            const config = JSON.parse(text)
+
+            if (!config.data || typeof config.data !== 'object') {
+                alert('配置文件格式错误')
+                return
+            }
+
+            if (!confirm('导入将覆盖当前全部配置（搜索引擎、快捷方式、布局、偏好），是否继续？')) {
+                return
+            }
+
+            for (const key of BACKUP_KEYS) {
+                if (config.data[key] !== undefined) {
+                    writeValue(key, config.data[key])
+                }
+            }
+
+            alert('导入成功，页面将刷新以应用配置')
+            location.reload()
+        } catch (error) {
+            console.error('导入失败:', error)
+            alert('导入失败，请检查文件格式')
+        }
+    }
+    input.click()
+}
+
 </script>
 
 <template>
@@ -88,6 +177,38 @@ loadLayout()
                 <p class="text-xs text-gray-500 mt-2">
                     当前：每行显示 {{ shortcutColumns }} 个快捷方式
                 </p>
+            </div>
+        </div>
+
+        <!-- 配置备份 -->
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">配置备份</h2>
+
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-1 pr-4">
+                    <h3 class="font-medium text-gray-800">导出 / 导入配置</h3>
+                    <p class="text-sm text-gray-500 mt-1">备份或恢复全部设置：搜索引擎、快捷方式、布局与偏好</p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <!-- 导出按钮 -->
+                    <button @click="exportConfig"
+                        class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        </svg>
+                        <span>导出</span>
+                    </button>
+                    <!-- 导入按钮 -->
+                    <button @click="importConfig"
+                        class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span>导入</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
