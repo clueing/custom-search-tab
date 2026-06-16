@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useSearchEngines } from '@/composables/useSearchEngines'
 import { useWallpaperSettings } from '@/composables/useWallpaperSettings'
+import { STORAGE_KEYS, BACKUP_KEYS, storage } from '@/utils/storage'
 
 const { suggestEnabled, toggleSuggest } = useSearchEngines()
 const { showInfo, showDate, showControls } = useWallpaperSettings()
@@ -18,25 +19,14 @@ const shortcutColumns = ref<number>(8)
 
 // 加载布局设置
 const loadLayout = () => {
-    try {
-        const stored = localStorage.getItem('shortcut_columns')
-        if (stored) {
-            shortcutColumns.value = Number(stored)
-        }
-    } catch (error) {
-        console.error('加载布局设置失败:', error)
-    }
+    shortcutColumns.value = storage.get<number>(STORAGE_KEYS.SHORTCUT_COLUMNS, 8)
 }
 
 // 保存布局设置
 const saveLayout = () => {
-    try {
-        localStorage.setItem('shortcut_columns', String(shortcutColumns.value))
-        // 触发自定义事件，通知 ShortcutManager 更新布局
-        window.dispatchEvent(new CustomEvent('shortcut-layout-change', { detail: shortcutColumns.value }))
-    } catch (error) {
-        console.error('保存布局设置失败:', error)
-    }
+    storage.set(STORAGE_KEYS.SHORTCUT_COLUMNS, shortcutColumns.value)
+    // 触发自定义事件，通知 ShortcutManager 更新布局
+    window.dispatchEvent(new CustomEvent('shortcut-layout-change', { detail: shortcutColumns.value }))
 }
 
 // 监听布局变化
@@ -46,21 +36,11 @@ watch(shortcutColumns, saveLayout)
 loadLayout()
 
 // ==================== 配置备份 ====================
-// 需要备份的全部 localStorage 键（不含每日壁纸临时缓存）
-const BACKUP_KEYS = [
-    'search_engines',
-    'active_engine_id',
-    'suggest_enabled',
-    'shortcuts',
-    'shortcut_columns',
-    'wallpaper_show_info',
-    'wallpaper_show_date',
-    'wallpaper_show_controls',
-]
+// 备份键来自 storage 工具（BACKUP_KEYS），新增配置项无需在此手动同步
 
 // 读取并解析单个配置值（解析失败时回退为原始字符串）
 const readValue = (key: string): unknown => {
-    const raw = localStorage.getItem(key)
+    const raw = storage.getRaw(key)
     if (raw === null) return undefined
     try {
         return JSON.parse(raw)
@@ -72,7 +52,7 @@ const readValue = (key: string): unknown => {
 // 写回单个配置值
 const writeValue = (key: string, value: unknown) => {
     if (value === undefined || value === null) return
-    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+    storage.setRaw(key, typeof value === 'string' ? value : JSON.stringify(value))
 }
 
 // 导出全部配置

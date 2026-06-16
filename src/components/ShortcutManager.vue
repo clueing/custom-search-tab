@@ -3,6 +3,7 @@ import AddIcon from '@/assets/icon/ProiconsAdd.svg'
 import EditIcon from '@/assets/icon/MaterialSymbolsEdit.svg'
 import DeleteIcon from '@/assets/icon/MaterialSymbolsDeleteOutline.svg'
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { STORAGE_KEYS, storage } from '@/utils/storage'
 
 interface Shortcut {
     id: string
@@ -41,12 +42,11 @@ const form = ref({
 
 // 从本地存储加载快捷方式
 const loadShortcuts = () => {
-    try {
-        const saved = localStorage.getItem('shortcuts')
-        if (saved) {
-            shortcuts.value = JSON.parse(saved)
-        } else {
-            shortcuts.value = [
+    const saved = storage.get<Shortcut[] | null>(STORAGE_KEYS.SHORTCUTS, null)
+    if (saved && saved.length) {
+        shortcuts.value = saved
+    } else {
+        shortcuts.value = [
                 {
                     id: '1',
                     url: 'https://outlook.live.com',
@@ -121,19 +121,12 @@ const loadShortcuts = () => {
                 },
             ]
             saveShortcuts()
-        }
-    } catch (error) {
-        console.error('加载快捷方式失败:', error)
     }
 }
 
 // 保存快捷方式到本地存储
 const saveShortcuts = () => {
-    try {
-        localStorage.setItem('shortcuts', JSON.stringify(shortcuts.value))
-    } catch (error) {
-        console.error('保存快捷方式失败:', error)
-    }
+    storage.set(STORAGE_KEYS.SHORTCUTS, shortcuts.value)
 }
 
 // 获取网站图标
@@ -282,14 +275,7 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside)
 
     // 加载布局设置
-    try {
-        const stored = localStorage.getItem('shortcut_columns')
-        if (stored) {
-            columns.value = Number(stored)
-        }
-    } catch (error) {
-        console.error('加载布局设置失败:', error)
-    }
+    columns.value = storage.get<number>(STORAGE_KEYS.SHORTCUT_COLUMNS, 8)
 
     // 监听布局变化事件
     const handleLayoutChange = (e: Event) => {

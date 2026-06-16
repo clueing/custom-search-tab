@@ -1,12 +1,6 @@
 import { ref, computed } from 'vue'
 import type { SearchEngineData, SearchEngine } from '@/types/search'
-
-// 存储键名
-const STORAGE_KEYS = {
-    SEARCH_ENGINES: 'search_engines',
-    ACTIVE_ENGINE_ID: 'active_engine_id',
-    SUGGEST_ENABLED: 'suggest_enabled',
-}
+import { STORAGE_KEYS, storage } from '@/utils/storage'
 
 // 预设搜索引擎
 const PRESET_ENGINES: SearchEngineData[] = [
@@ -61,70 +55,39 @@ let initialized = false
 export function useSearchEngines() {
     // 从 localStorage 加载引擎列表
     const loadEngines = () => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEYS.SEARCH_ENGINES)
-            if (stored) {
-                searchEngines.value = JSON.parse(stored)
-            } else {
-                // 首次使用，初始化预设引擎
-                searchEngines.value = [...PRESET_ENGINES]
-                saveEngines()
-            }
-        } catch (error) {
-            console.error('加载搜索引擎失败:', error)
+        const stored = storage.get<SearchEngineData[] | null>(STORAGE_KEYS.SEARCH_ENGINES, null)
+        if (stored && Array.isArray(stored)) {
+            searchEngines.value = stored
+        } else {
+            // 首次使用，初始化预设引擎
             searchEngines.value = [...PRESET_ENGINES]
+            saveEngines()
         }
     }
 
     // 保存引擎列表到 localStorage
     const saveEngines = () => {
-        try {
-            localStorage.setItem(STORAGE_KEYS.SEARCH_ENGINES, JSON.stringify(searchEngines.value))
-        } catch (error) {
-            console.error('保存搜索引擎失败:', error)
-        }
+        storage.set(STORAGE_KEYS.SEARCH_ENGINES, searchEngines.value)
     }
 
     // 加载当前选中的引擎 ID
     const loadActiveEngineId = () => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEYS.ACTIVE_ENGINE_ID)
-            if (stored) {
-                activeEngineId.value = Number(stored)
-            }
-        } catch (error) {
-            console.error('加载当前引擎 ID 失败:', error)
-        }
+        activeEngineId.value = storage.get<number>(STORAGE_KEYS.ACTIVE_ENGINE_ID, 1)
     }
 
     // 保存当前选中的引擎 ID
     const saveActiveEngineId = () => {
-        try {
-            localStorage.setItem(STORAGE_KEYS.ACTIVE_ENGINE_ID, String(activeEngineId.value))
-        } catch (error) {
-            console.error('保存当前引擎 ID 失败:', error)
-        }
+        storage.set(STORAGE_KEYS.ACTIVE_ENGINE_ID, activeEngineId.value)
     }
 
     // 加载搜索建议开关状态
     const loadSuggestEnabled = () => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEYS.SUGGEST_ENABLED)
-            if (stored !== null) {
-                suggestEnabled.value = stored === 'true'
-            }
-        } catch (error) {
-            console.error('加载搜索建议开关状态失败:', error)
-        }
+        suggestEnabled.value = storage.get<boolean>(STORAGE_KEYS.SUGGEST_ENABLED, true)
     }
 
     // 保存搜索建议开关状态
     const saveSuggestEnabled = () => {
-        try {
-            localStorage.setItem(STORAGE_KEYS.SUGGEST_ENABLED, String(suggestEnabled.value))
-        } catch (error) {
-            console.error('保存搜索建议开关状态失败:', error)
-        }
+        storage.set(STORAGE_KEYS.SUGGEST_ENABLED, suggestEnabled.value)
     }
 
     // 初始化（只执行一次）

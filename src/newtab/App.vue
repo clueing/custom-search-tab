@@ -3,6 +3,7 @@ import SearchBar from '@/components/SearchBar.vue'
 import ShortcutManager from '@/components/ShortcutManager.vue'
 import SettingsPanel from '@/components/SettingsPanel.vue'
 import { useWallpaperSettings } from '@/composables/useWallpaperSettings'
+import { STORAGE_KEYS, storage } from '@/utils/storage'
 import { onMounted, ref, computed } from 'vue'
 
 // 设置面板显示状态
@@ -44,12 +45,6 @@ const BING_API_OPTIONS = {
 // 默认壁纸（所有获取方式都失败时使用）
 const DEFAULT_WALLPAPER = 'https://www.bing.com/th?id=OHR.CopanRuins_ZH-CN2157795324_1920x1080.jpg'
 
-// 存储键
-const STORAGE_KEYS = {
-  CACHE: 'bing_wallpaper_cache',
-  LOCK: 'bing_wallpaper_lock',
-}
-
 // 获取今天的日期字符串 (YYYY-MM-DD)
 const getTodayDateString = () => new Date().toISOString().split('T')[0]
 
@@ -57,48 +52,22 @@ const getTodayDateString = () => new Date().toISOString().split('T')[0]
 const formatBingDate = (s: string) =>
   s && s.length === 8 ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}` : getTodayDateString()
 
-// 读取壁纸列表缓存
-const getWallpaperCache = () => {
-  try {
-    const cache = localStorage.getItem(STORAGE_KEYS.CACHE)
-    return cache ? JSON.parse(cache) : null
-  } catch (error) {
-    console.error('读取壁纸缓存失败:', error)
-    return null
-  }
+// 壁纸列表缓存结构
+interface WallpaperCache {
+  date: string
+  timestamp: number
+  wallpapers: Wallpaper[]
 }
 
-// 保存壁纸列表缓存
-const saveWallpaperCache = (date: string, list: Wallpaper[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify({ date, timestamp: Date.now(), wallpapers: list }))
-  } catch (error) {
-    console.error('保存壁纸缓存失败:', error)
-  }
-}
+// 读取 / 保存壁纸列表缓存
+const getWallpaperCache = () => storage.get<WallpaperCache | null>(STORAGE_KEYS.WALLPAPER_CACHE, null)
+const saveWallpaperCache = (date: string, list: Wallpaper[]) =>
+  storage.set(STORAGE_KEYS.WALLPAPER_CACHE, { date, timestamp: Date.now(), wallpapers: list })
 
-// 读取锁定信息
-const getLock = (): Wallpaper | null => {
-  try {
-    const lock = localStorage.getItem(STORAGE_KEYS.LOCK)
-    return lock ? JSON.parse(lock) : null
-  } catch (error) {
-    console.error('读取壁纸锁定失败:', error)
-    return null
-  }
-}
-
-// 保存锁定信息
-const saveLock = (wallpaper: Wallpaper) => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.LOCK, JSON.stringify(wallpaper))
-  } catch (error) {
-    console.error('保存壁纸锁定失败:', error)
-  }
-}
-
-// 清除锁定信息
-const clearLock = () => localStorage.removeItem(STORAGE_KEYS.LOCK)
+// 读取 / 保存 / 清除锁定信息
+const getLock = () => storage.get<Wallpaper | null>(STORAGE_KEYS.WALLPAPER_LOCK, null)
+const saveLock = (wallpaper: Wallpaper) => storage.set(STORAGE_KEYS.WALLPAPER_LOCK, wallpaper)
+const clearLock = () => storage.remove(STORAGE_KEYS.WALLPAPER_LOCK)
 
 // 从必应 API 获取最近多天壁纸
 const fetchBingWallpapers = async (): Promise<Wallpaper[]> => {
