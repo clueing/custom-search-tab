@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useSearchEngines } from '@/composables/useSearchEngines'
+import { useWallpaperSettings } from '@/composables/useWallpaperSettings'
 
 const { suggestEnabled, toggleSuggest } = useSearchEngines()
+const { showInfo, showDate, showControls } = useWallpaperSettings()
 
 // 快捷方式布局设置
 const LAYOUT_OPTIONS = [
@@ -51,6 +53,9 @@ const BACKUP_KEYS = [
     'suggest_enabled',
     'shortcuts',
     'shortcut_columns',
+    'wallpaper_show_info',
+    'wallpaper_show_date',
+    'wallpaper_show_controls',
 ]
 
 // 读取并解析单个配置值（解析失败时回退为原始字符串）
@@ -152,6 +157,62 @@ const importConfig = () => {
                     <span :class="[
                         'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
                         suggestEnabled ? 'left-7' : 'left-1'
+                    ]" />
+                </button>
+            </div>
+        </div>
+
+        <!-- 壁纸设置 -->
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">壁纸设置</h2>
+
+            <!-- 壁纸详情开关 -->
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-1 pr-4">
+                    <h3 class="font-medium text-gray-800">壁纸详情</h3>
+                    <p class="text-sm text-gray-500 mt-1">在左下角显示壁纸描述与版权信息</p>
+                </div>
+                <button @click="showInfo = !showInfo" :class="[
+                    'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+                    showInfo ? 'bg-blue-500' : 'bg-gray-300'
+                ]">
+                    <span :class="[
+                        'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                        showInfo ? 'left-7' : 'left-1'
+                    ]" />
+                </button>
+            </div>
+
+            <!-- 壁纸日期开关 -->
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-1 pr-4">
+                    <h3 class="font-medium text-gray-800">壁纸日期</h3>
+                    <p class="text-sm text-gray-500 mt-1">在右下角显示当前壁纸日期</p>
+                </div>
+                <button @click="showDate = !showDate" :class="[
+                    'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+                    showDate ? 'bg-blue-500' : 'bg-gray-300'
+                ]">
+                    <span :class="[
+                        'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                        showDate ? 'left-7' : 'left-1'
+                    ]" />
+                </button>
+            </div>
+
+            <!-- 切换与锁定按钮开关 -->
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-1 pr-4">
+                    <h3 class="font-medium text-gray-800">切换与锁定按钮</h3>
+                    <p class="text-sm text-gray-500 mt-1">显示壁纸的上一天 / 下一天与锁定按钮</p>
+                </div>
+                <button @click="showControls = !showControls" :class="[
+                    'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+                    showControls ? 'bg-blue-500' : 'bg-gray-300'
+                ]">
+                    <span :class="[
+                        'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                        showControls ? 'left-7' : 'left-1'
                     ]" />
                 </button>
             </div>

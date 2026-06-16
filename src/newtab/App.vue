@@ -2,10 +2,14 @@
 import SearchBar from '@/components/SearchBar.vue'
 import ShortcutManager from '@/components/ShortcutManager.vue'
 import SettingsPanel from '@/components/SettingsPanel.vue'
+import { useWallpaperSettings } from '@/composables/useWallpaperSettings'
 import { onMounted, ref, computed } from 'vue'
 
 // 设置面板显示状态
 const showSettings = ref(false)
+
+// 壁纸显示设置
+const { showInfo, showDate, showControls } = useWallpaperSettings()
 
 // const currentYear = ref(new Date().getFullYear())
 
@@ -13,15 +17,19 @@ const showSettings = ref(false)
 interface Wallpaper {
   url: string
   date: string // YYYY-MM-DD
+  title?: string // 标题
+  copyright?: string // 描述 / 版权
 }
-
-// 当前显示的背景图与日期
-const backgroundImageUrl = ref('')
-const currentDate = ref('')
 
 // 已获取的壁纸列表（最新在前，index 0 为今日）
 const wallpapers = ref<Wallpaper[]>([])
 const currentIndex = ref(0)
+
+// 当前显示的壁纸
+const current = ref<Wallpaper | null>(null)
+const backgroundImageUrl = computed(() => current.value?.url || '')
+const currentDate = computed(() => current.value?.date || '')
+const currentInfo = computed(() => current.value?.title || current.value?.copyright || '')
 
 // 锁定状态：锁定后固定显示某天壁纸，打开时不再自动获取最新
 const locked = ref(false)
@@ -101,6 +109,8 @@ const fetchBingWallpapers = async (): Promise<Wallpaper[]> => {
     return data.images.map((img: any) => ({
       url: img.url.startsWith('http') ? img.url : `https://www.bing.com${img.url}`,
       date: formatBingDate(img.startdate),
+      title: img.title,
+      copyright: img.copyright,
     }))
   } catch (error) {
     console.error('必应官方API失败，尝试备用API:', error)
@@ -112,6 +122,8 @@ const fetchBingWallpapers = async (): Promise<Wallpaper[]> => {
       return data.images.map((img: any) => ({
         url: img.url.startsWith('http') ? img.url : `https://cn.bing.com${img.url}`,
         date: formatBingDate(img.startdate),
+        title: img.title,
+        copyright: img.copyright,
       }))
     } catch (error2) {
       console.error('中国区API也失败，尝试代理API:', error2)
@@ -119,7 +131,7 @@ const fetchBingWallpapers = async (): Promise<Wallpaper[]> => {
       // 备用方案2：代理 API（仅当天一张，不支持往日切换）
       const res = await fetch(BING_API_OPTIONS.proxy)
       const data = await res.json()
-      return [{ url: data.url, date: getTodayDateString() }]
+      return [{ url: data.url, date: getTodayDateString(), copyright: data.copyright }]
     }
   }
 }
@@ -129,8 +141,7 @@ const applyWallpaper = (index: number) => {
   const wp = wallpapers.value[index]
   if (!wp) return
   currentIndex.value = index
-  backgroundImageUrl.value = wp.url
-  currentDate.value = wp.date
+  current.value = wp
 }
 
 // 加载壁纸列表（带当天缓存）并显示最新
@@ -158,7 +169,7 @@ const loadWallpapers = async () => {
       wallpapers.value = cache.wallpapers
       applyWallpaper(0)
     } else {
-      backgroundImageUrl.value = DEFAULT_WALLPAPER
+      current.value = { url: DEFAULT_WALLPAPER, date: getTodayDateString() }
     }
   }
 }
@@ -188,9 +199,9 @@ const toggleLock = async () => {
     }
   } else {
     // 锁定当前壁纸
-    if (!backgroundImageUrl.value) return
+    if (!current.value) return
     locked.value = true
-    saveLock({ url: backgroundImageUrl.value, date: currentDate.value })
+    saveLock(current.value)
   }
 }
 
@@ -201,8 +212,7 @@ onMounted(async () => {
   if (lock && lock.url) {
     // 已锁定：固定显示锁定壁纸，不自动获取最新
     locked.value = true
-    backgroundImageUrl.value = lock.url
-    currentDate.value = lock.date
+    current.value = lock
     return
   }
 
@@ -239,16 +249,23 @@ onMounted(async () => {
     <!-- 设置面板 -->
     <SettingsPanel v-model:show="showSettings" />
 
+    <!-- 壁纸详情（描述 / 版权） -->
+    <div v-if="showInfo && currentInfo" class="fixed bottom-6 left-6 z-30 max-w-md">
+      <p class="px-4 py-2 rounded-xl bg-black/30 backdrop-blur text-white text-sm shadow select-none">
+        {{ currentInfo }}
+      </p>
+    </div>
+
     <!-- 壁纸控制条 -->
-    <div class="fixed bottom-6 right-6 z-30 flex items-center gap-2">
+    <div v-if="(showDate && currentDate) || showControls" class="fixed bottom-6 right-6 z-30 flex items-center gap-2">
       <!-- 当前壁纸日期 -->
-      <span v-if="currentDate"
+      <span v-if="showDate && currentDate"
         class="px-3 h-9 flex items-center rounded-full bg-white/80 backdrop-blur shadow text-xs text-gray-600 select-none">
         {{ currentDate }}
       </span>
 
       <!-- 切换按钮（锁定时隐藏） -->
-      <template v-if="!locked">
+      <template v-if="showControls && !locked">
         <button @click="prevDay" :disabled="!canPrev" title="上一天"
           class="w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-600 transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,7 +281,7 @@ onMounted(async () => {
       </template>
 
       <!-- 锁定 / 解锁 -->
-      <button @click="toggleLock" :title="locked ? '解锁壁纸（恢复自动更新）' : '锁定当前壁纸'"
+      <button v-if="showControls" @click="toggleLock" :title="locked ? '解锁壁纸（恢复自动更新）' : '锁定当前壁纸'"
         class="w-9 h-9 rounded-full backdrop-blur shadow flex items-center justify-center transition-all hover:scale-110"
         :class="locked ? 'bg-blue-500 text-white' : 'bg-white/80 text-gray-600'">
         <!-- 已锁定图标 -->
