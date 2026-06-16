@@ -12,6 +12,15 @@ export default defineManifest({
     48: 'public/logo-48.png',
     128: 'public/logo.png',
   },
+  action: {
+    default_icon: {
+      16: 'public/logo-16.png',
+      32: 'public/logo-32.png',
+      48: 'public/logo-48.png',
+      128: 'public/logo.png',
+    },
+    default_popup: 'src/popup/index.html',
+  },
   host_permissions: [
     "https://suggestion.baidu.com/*",
     "https://www.bing.com/*",
