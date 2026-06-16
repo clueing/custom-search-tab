@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import CloseIcon from '@/assets/icon/IonClose.svg'
+import SearchEngineManager from './settings/SearchEngineManager.vue'
+import GeneralSettings from './settings/GeneralSettings.vue'
 
 // 定义 props 和 emits
 defineProps<{
@@ -75,12 +77,12 @@ const switchTab = (tab: 'engines' | 'general' | 'about') => {
                     <main class="flex-1 overflow-y-auto p-6">
                         <!-- 搜索引擎管理 Tab -->
                         <div v-show="activeTab === 'engines'">
-                            <p class="text-gray-500">搜索引擎管理功能开发中...</p>
+                            <SearchEngineManager />
                         </div>
 
                         <!-- 通用设置 Tab -->
                         <div v-show="activeTab === 'general'">
-                            <p class="text-gray-500">通用设置功能开发中...</p>
+                            <GeneralSettings />
                         </div>
 
                         <!-- 关于 Tab -->
