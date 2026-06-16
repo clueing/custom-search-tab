@@ -53,9 +53,10 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
   - `settings/` - 设置相关组件
     - `SearchEngineManager.vue` - 搜索引擎管理
     - `SearchEngineForm.vue` - 添加/编辑引擎表单
-    - `GeneralSettings.vue` - 通用设置（搜索建议开关）
+    - `GeneralSettings.vue` - 通用设置（搜索建议开关、快捷方式布局、壁纸设置、配置备份）
 - `composables/` - 状态管理
   - `useSearchEngines.ts` - 搜索引擎状态管理（增删改查、localStorage 持久化）
+  - `useWallpaperSettings.ts` - 壁纸显示设置（详情/日期/控制按钮开关，模块级响应式共享 + localStorage 持久化）
 - `popup/` - 工具栏点击弹出面板（当前已注释，未启用）
 - `sidepanel/` - 侧边栏面板（未使用）
 - `content/` - 内容脚本（页面悬浮球，当前已注释，未启用）
@@ -72,10 +73,14 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 ### 核心功能逻辑
 
 **必应壁纸 (`newtab/App.vue`):**
-- 使用 localStorage 缓存当天壁纸（key: `bing_wallpaper_cache`），避免重复请求
-- 多 API 降级策略：官方 API → 中国区 API → 代理 API
-- 缓存数据结构：`{ url: string, date: string, timestamp: number }`
-- 每日首次加载时自动获取最新壁纸并更新缓存
+- 一次获取最近 8 天壁纸（API 参数 `idx=0&n=8`），支持按天切换上一天 / 下一天
+- 多 API 降级策略：官方 API → 中国区 API → 代理 API（代理仅返回当天一张，不支持往日切换）
+- 壁纸对象结构：`{ url, date, title?, copyright? }`
+- localStorage 缓存当天列表（key: `bing_wallpaper_cache`，结构 `{ date, timestamp, wallpapers: [] }`），避免重复请求
+- **锁定功能**：锁定后固定显示当前壁纸（key: `bing_wallpaper_lock`），打开页面不再自动获取最新；解锁后恢复自动更新
+- **壁纸详情**：左下角显示壁纸标题 / 版权（`currentInfo`）
+- 右下角控制条：日期、上一天 / 下一天、锁定 / 解锁；各元素显隐由 `useWallpaperSettings` 控制
+- 注意：必应 API 不返回 CORS 头，需在 `manifest.config.ts` 的 `host_permissions` 声明必应域名以绕过 CORS
 
 **搜索功能 (`SearchBar.vue` + `useSearchEngines.ts`):**
 - 使用 Composable 模式管理搜索引擎状态
@@ -91,7 +96,17 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 - 右上角齿轮按钮触发
 - 侧边滑出动画（从右侧滑入，200ms ease-out）
 - 三个 Tab：搜索引擎管理、通用设置、关于
+- 关于 Tab 含项目地址链接（GitHub）
 - 半透明遮罩 + 白色面板
+
+**通用设置 (`GeneralSettings.vue`):**
+- 搜索建议开关（`suggest_enabled`）
+- 快捷方式布局列数（`shortcut_columns`，通过 `shortcut-layout-change` 自定义事件通知 `ShortcutManager`）
+- 壁纸设置：壁纸详情 / 日期 / 切换与锁定按钮三个开关（由 `useWallpaperSettings` 管理）
+- **配置备份**：导出 / 导入全部配置
+  - 备份范围：`search_engines`、`active_engine_id`、`suggest_enabled`、`shortcuts`、`shortcut_columns`、`wallpaper_show_*`（不含每日壁纸临时缓存）
+  - 导出为 `{ version, exportTime, data }` 的 JSON 文件
+  - 导入校验格式 + 二次确认，写回 localStorage 后 `location.reload()` 使各组件重新初始化
 
 **搜索引擎管理 (`SearchEngineManager.vue` + `SearchEngineForm.vue`):**
 - 展示所有搜索引擎（预设 + 自定义）
@@ -106,10 +121,11 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 
 **快捷方式 (`ShortcutManager.vue`):**
 - localStorage 持久化（key: `shortcuts`）
-- 右键点击显示编辑/删除按钮
+- 右键唤出编辑/删除按钮，点击其他区域自动收起
 - 支持两种图标类型：
   - `url` - 网站 favicon URL
   - `text` - 文字图标（带自定义背景色）
+- 图标来源可切换：Google Favicon API 或网站自带 `favicon.ico`
 - 自动获取网站信息功能（favicon + 域名标题）
 - Teleport 渲染编辑对话框到 `body`，避免 z-index 问题
 
@@ -128,7 +144,9 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 **Chrome 扩展权限 (manifest.config.ts):**
 - `sidePanel` - 侧边栏支持
 - `contentSettings` - 内容设置
-- `host_permissions` - 百度搜索建议 API (`https://suggestion.baidu.com/*`)
+- `host_permissions` - 跨域 API 访问（绕过 CORS）：
+  - 百度搜索建议 (`https://suggestion.baidu.com/*`)
+  - 必应壁纸 (`https://www.bing.com/*`、`https://cn.bing.com/*`、`https://bing.biturl.top/*`)
 
 **CRXJS 热更新:**
 - 开发模式下修改代码会自动触发扩展重新加载
