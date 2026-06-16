@@ -16,6 +16,7 @@ interface Shortcut {
 const shortcuts = ref<Shortcut[]>([])
 const showEditModal = ref(false)
 const editingShortcut = ref<Shortcut | null>(null)
+const activeShortcutId = ref<string | null>(null) // 右键唤出操作按钮的卡片
 const columns = ref<number>(8) // 默认 8 列
 
 // 计算网格类名
@@ -135,11 +136,15 @@ const saveShortcuts = () => {
     }
 }
 
-// 获取网站图标（支持多种 favicon 格式）
-const getFaviconUrl = (url: string): string => {
+// 获取网站图标
+// - google: Google Favicon API（稳定、统一尺寸）
+// - site:   网站自带的 favicon.ico（更贴近原站图标）
+const getFaviconUrl = (url: string, source: 'google' | 'site' = 'google'): string => {
     try {
         const urlObj = new URL(url)
-        // 优先使用 Google Favicon API（更稳定）
+        if (source === 'site') {
+            return `${urlObj.origin}/favicon.ico`
+        }
         return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`
     } catch {
         return ''
@@ -210,6 +215,21 @@ const switchToTextIcon = () => {
     form.value.icon = form.value.title.substring(0, 2)
 }
 
+// 指定图标来源并填充图标 URL
+const setIconSource = (source: 'google' | 'site') => {
+    if (!form.value.url) {
+        alert('请先填写网址')
+        return
+    }
+    let url = form.value.url
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url
+        form.value.url = url
+    }
+    form.value.iconType = 'url'
+    form.value.icon = getFaviconUrl(url, source)
+}
+
 // 保存快捷方式
 const saveShortcut = () => {
     if (!form.value.url || !form.value.title) {
@@ -250,9 +270,16 @@ const closeEditModal = () => {
     editingShortcut.value = null
 }
 
+// 点击其他地方关闭右键唤出的操作按钮
+const handleClickOutside = () => {
+    activeShortcutId.value = null
+}
+
 // 组件挂载时添加全局点击监听
 onMounted(() => {
     loadShortcuts()
+
+    document.addEventListener('click', handleClickOutside)
 
     // 加载布局设置
     try {
@@ -277,6 +304,8 @@ onMounted(() => {
 
 // 组件卸载时移除监听
 onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside)
+
     const handler = (window as any).__shortcutLayoutHandler
     if (handler) {
         window.removeEventListener('shortcut-layout-change', handler)
@@ -290,7 +319,7 @@ onBeforeUnmount(() => {
         <ul :class="['grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4', gridClass]">
             <!-- 快捷方式卡片 -->
             <li v-for="shortcut in shortcuts" :key="shortcut.id" class="flex flex-col items-center gap-2 group">
-                <div class="relative shortcut-card">
+                <div class="relative shortcut-card" @contextmenu.prevent="activeShortcutId = shortcut.id">
                     <!-- 快捷方式链接 -->
                     <a :href="shortcut.url" target="_blank" rel="noopener"
                         class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-lg hover:scale-110 active:scale-95 flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-200">
@@ -304,17 +333,20 @@ onBeforeUnmount(() => {
                         </div>
                     </a>
 
-                    <!-- 编辑/删除按钮（hover 显示） -->
-                    <div class="absolute -top-2 -right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button @click.prevent="openEditModal(shortcut)"
-                            class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-all hover:scale-110 active:scale-95">
-                            <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
-                        </button>
-                        <button @click.prevent="deleteShortcut(shortcut.id)"
-                            class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-all hover:scale-110 active:scale-95">
-                            <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
-                        </button>
-                    </div>
+                    <!-- 编辑/删除按钮（右键唤出） -->
+                    <Transition name="action-buttons">
+                        <div v-if="activeShortcutId === shortcut.id"
+                            class="absolute -top-2 -right-2 flex gap-1 z-10">
+                            <button @click.prevent="openEditModal(shortcut)"
+                                class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                                <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
+                            </button>
+                            <button @click.prevent="deleteShortcut(shortcut.id)"
+                                class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                                <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
+                            </button>
+                        </div>
+                    </Transition>
                 </div>
                 <span class="text-sm text-[#dddddd] group-hover:text-white transition-colors">{{ shortcut.title }}</span>
             </li>
@@ -379,6 +411,17 @@ onBeforeUnmount(() => {
                                 <label class="block text-sm font-medium text-gray-700 mb-1">图标URL</label>
                                 <input v-model="form.icon" type="text" placeholder="https://example.com/icon.png"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <!-- 图标来源快捷填充 -->
+                                <div class="flex gap-2 mt-2">
+                                    <button type="button" @click="setIconSource('google')"
+                                        class="flex-1 px-3 py-1.5 text-xs text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                        Google 图标
+                                    </button>
+                                    <button type="button" @click="setIconSource('site')"
+                                        class="flex-1 px-3 py-1.5 text-xs text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                        网站图标 (favicon.ico)
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- 文字图标设置 -->
