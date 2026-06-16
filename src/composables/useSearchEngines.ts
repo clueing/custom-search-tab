@@ -7,7 +7,7 @@ const PRESET_ENGINES: SearchEngineData[] = [
     {
         id: 1,
         name: '必应',
-        icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=128',
+        icon: 'https://www.bing.com/favicon.ico',
         searchUrlTemplate: 'https://www.bing.com/search?q={keyword}',
         isCustom: false,
     },
