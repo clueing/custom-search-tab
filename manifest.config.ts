@@ -26,6 +26,9 @@ export default defineManifest({
   ],
   host_permissions: [
     "https://suggestion.baidu.com/*",
+    "https://www.bing.com/*",
+    "https://cn.bing.com/*",
+    "https://bing.biturl.top/*",
   ],
   side_panel: {
     default_path: 'src/sidepanel/index.html',
