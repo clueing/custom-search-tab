@@ -1,0 +1,67 @@
+name: Release
+
+# 版本驱动的自动发布：
+# 推送到 main 时，以 package.json 的 version 为准，
+# 若对应的 Release 尚不存在，则自动构建、打标签并发布、上传构建产物。
+# 只需修改 package.json 的版本号并推送即可发版，无需手动打标签。
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 读取 package.json 版本号
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: 检查该版本是否已发布
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release v${{ steps.version.outputs.version }} 已存在，跳过发布"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Release v${{ steps.version.outputs.version }} 不存在，开始构建发布"
+          fi
+
+      - name: 安装 pnpm
+        if: steps.check.outputs.exists == 'false'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: 安装 Node
+        if: steps.check.outputs.exists == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: 安装依赖
+        if: steps.check.outputs.exists == 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建
+        if: steps.check.outputs.exists == 'false'
+        run: pnpm build
+
+      - name: 创建 Release 并上传构建产物
+        if: steps.check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: release/*.zip
