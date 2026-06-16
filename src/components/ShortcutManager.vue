@@ -124,11 +124,12 @@ const saveShortcuts = () => {
     }
 }
 
-// 获取网站图标
+// 获取网站图标（支持多种 favicon 格式）
 const getFaviconUrl = (url: string): string => {
     try {
-        const domain = new URL(url).origin
-        return `${domain}/favicon.ico`
+        const urlObj = new URL(url)
+        // 优先使用 Google Favicon API（更稳定）
+        return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`
     } catch {
         return ''
     }
@@ -287,7 +288,7 @@ onBeforeUnmount(() => {
                     <!-- 快捷方式链接 -->
                     <a :href="shortcut.url" target="_blank" rel="noopener"
                         @contextmenu="(e) => handleRightClick(e, shortcut.id)"
-                        class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-md flex items-center justify-center overflow-hidden cursor-pointer">
+                        class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-lg hover:scale-110 active:scale-95 flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-200">
                         <!-- 图标类型：URL -->
                         <img v-if="shortcut.iconType === 'url'" :src="shortcut.icon" class="w-8 h-8 object-contain"
                             @error="(e) => (e.target as HTMLImageElement).style.display = 'none'" draggable="false" />
@@ -299,27 +300,29 @@ onBeforeUnmount(() => {
                     </a>
 
                     <!-- 编辑/删除按钮（右键显示） -->
-                    <div v-if="activeShortcutId === shortcut.id" class="absolute -top-2 -right-2 flex gap-1 z-10">
-                        <button @click="openEditModal(shortcut)"
-                            class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-transform transform hover:scale-110">
-                            <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
-                        </button>
-                        <button @click="deleteShortcut(shortcut.id)"
-                            class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-transform transform hover:scale-110">
-                            <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
-                        </button>
-                    </div>
+                    <Transition name="action-buttons">
+                        <div v-if="activeShortcutId === shortcut.id" class="absolute -top-2 -right-2 flex gap-1 z-10">
+                            <button @click="openEditModal(shortcut)"
+                                class="edit-button w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                                <img class="w-4 h-4" :src="EditIcon" alt="编辑" />
+                            </button>
+                            <button @click="deleteShortcut(shortcut.id)"
+                                class="delete-button w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg transition-all hover:scale-110 active:scale-95">
+                                <img class="w-4 h-4" :src="DeleteIcon" alt="删除" />
+                            </button>
+                        </div>
+                    </Transition>
                 </div>
-                <span class="text-sm text-[#dddddd]">{{ shortcut.title }}</span>
+                <span class="text-sm text-[#dddddd] group-hover:text-white transition-colors">{{ shortcut.title }}</span>
             </li>
 
             <!-- 添加按钮 -->
-            <li class="flex flex-col items-center gap-2">
+            <li class="flex flex-col items-center gap-2 group">
                 <button @click="openEditModal()" @click.stop="activeShortcutId = null"
-                    class="w-14 h-14 rounded-2xl bg-white shadow hover:shadow-md flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors">
+                    class="w-14 h-14 rounded-2xl bg-white/90 shadow hover:shadow-lg hover:scale-110 active:scale-95 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all duration-200 backdrop-blur">
                     <img class="w-5 h-5" :src="AddIcon" alt="添加" />
                 </button>
-                <span class="text-sm text-[#dddddd]">添加</span>
+                <span class="text-sm text-[#dddddd] group-hover:text-white transition-colors">添加</span>
             </li>
         </ul>
 
@@ -431,6 +434,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* 模态框动画 */
 .modal-enter-active,
 .modal-leave-active {
     transition: opacity 0.2s ease;
@@ -451,20 +455,39 @@ onBeforeUnmount(() => {
     transform: scale(0.95);
 }
 
+/* 操作按钮动画 */
+.action-buttons-enter-active {
+    animation: action-in 0.2s ease-out;
+}
+
+.action-buttons-leave-active {
+    animation: action-out 0.15s ease-in;
+}
+
+@keyframes action-in {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes action-out {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.5) translateY(5px);
+    }
+}
+
 /* 确保操作按钮显示在最上层 */
 .relative {
     position: relative;
-}
-
-/* 操作按钮的动画效果 */
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-    transform: scale(0.8);
 }
 </style>

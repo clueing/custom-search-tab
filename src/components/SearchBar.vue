@@ -167,9 +167,11 @@ onUnmounted(() => {
             class="relative flex items-center h-14 px-4 rounded-2xl bg-white shadow-lg">
             <!-- 引擎选择 -->
             <button type="button" @click="showDrop = !showDrop"
-                class="flex items-center gap-2 mr-3 outline-none bg-white">
+                class="flex items-center gap-2 mr-3 outline-none bg-white hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors">
                 <img :src="currentEngine.icon" class="w-6 h-6 object-contain" draggable="false" />
-                <span class="i-carbon-chevron-down text-gray-500" />
+                <svg :class="['w-4 h-4 text-gray-500 transition-transform duration-200', showDrop ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
             </button>
 
             <!-- 输入 -->
@@ -185,11 +187,16 @@ onUnmounted(() => {
             </div>
 
             <!-- 引擎选择下拉列表 -->
-            <Transition name="fade">
+            <Transition name="dropdown">
                 <div v-if="showDrop"
                     class="z-99 absolute top-16 left-0 w-full max-h-60 overflow-y-auto rounded-2xl bg-white shadow-xl p-3 grid grid-cols-4 gap-3">
                     <div v-for="e in engines" :key="e.id" @click="setActiveEngine(e.id); showDrop = false"
-                        class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        :class="[
+                            'flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer transition-all',
+                            activeEngineId === e.id
+                                ? 'bg-blue-50 ring-2 ring-blue-500'
+                                : 'hover:bg-gray-100 hover:scale-105'
+                        ]">
                         <img :src="e.icon" class="w-8 h-8 object-contain" draggable="false" />
                         <span class="text-xs text-gray-700">{{ e.name }}</span>
                     </div>
@@ -215,6 +222,38 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* 下拉框动画 */
+.dropdown-enter-active {
+    animation: dropdown-in 0.2s ease-out;
+}
+
+.dropdown-leave-active {
+    animation: dropdown-out 0.15s ease-in;
+}
+
+@keyframes dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes dropdown-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+/* 搜索建议淡入淡出 */
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.15s ease;

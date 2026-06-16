@@ -15,10 +15,10 @@ const { searchEngines, addEngine, updateEngine } = useSearchEngines()
 
 // 常用引擎模板
 const ENGINE_TEMPLATES = [
-    { name: 'DuckDuckGo', template: 'https://duckduckgo.com/?q={keyword}', icon: 'https://duckduckgo.com/favicon.ico' },
-    { name: '搜狗', template: 'https://www.sogou.com/web?query={keyword}', icon: 'https://www.sogou.com/favicon.ico' },
-    { name: '360搜索', template: 'https://www.so.com/s?q={keyword}', icon: 'https://www.so.com/favicon.ico' },
-    { name: 'Yandex', template: 'https://yandex.com/search/?text={keyword}', icon: 'https://yandex.com/favicon.ico' },
+    { name: 'DuckDuckGo', template: 'https://duckduckgo.com/?q={keyword}', icon: 'https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=128' },
+    { name: '搜狗', template: 'https://www.sogou.com/web?query={keyword}', icon: 'https://www.google.com/s2/favicons?domain=sogou.com&sz=128' },
+    { name: '360搜索', template: 'https://www.so.com/s?q={keyword}', icon: 'https://www.google.com/s2/favicons?domain=so.com&sz=128' },
+    { name: 'Yandex', template: 'https://yandex.com/search/?text={keyword}', icon: 'https://www.google.com/s2/favicons?domain=yandex.com&sz=128' },
 ]
 
 // 表单数据
@@ -64,8 +64,9 @@ const autoFetchIcon = () => {
         // 从模板 URL 中提取域名
         const urlMatch = form.value.searchUrlTemplate.match(/^https?:\/\/([^\/]+)/)
         if (urlMatch) {
-            const domain = urlMatch[0]
-            form.value.icon = `${domain}/favicon.ico`
+            const hostname = urlMatch[1]
+            // 使用 Google Favicon API 获取更清晰的图标
+            form.value.icon = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`
         }
     } catch (error) {
         console.error('获取图标失败:', error)
