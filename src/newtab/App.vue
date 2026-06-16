@@ -2,33 +2,57 @@
 import SearchBar from '@/components/SearchBar.vue'
 import ShortcutManager from '@/components/ShortcutManager.vue'
 import SettingsPanel from '@/components/SettingsPanel.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 
 // 设置面板显示状态
 const showSettings = ref(false)
 
 // const currentYear = ref(new Date().getFullYear())
 
-// 背景图片 URL
-const backgroundImageUrl = ref('')
+// 壁纸数据结构
+interface Wallpaper {
+  url: string
+  date: string // YYYY-MM-DD
+}
 
-// 必应壁纸API地址（可选其中一个）
+// 当前显示的背景图与日期
+const backgroundImageUrl = ref('')
+const currentDate = ref('')
+
+// 已获取的壁纸列表（最新在前，index 0 为今日）
+const wallpapers = ref<Wallpaper[]>([])
+const currentIndex = ref(0)
+
+// 锁定状态：锁定后固定显示某天壁纸，打开时不再自动获取最新
+const locked = ref(false)
+
+// 必应壁纸 API（idx=0 起、n=8 取最近 8 天）
 const BING_API_OPTIONS = {
-  official: 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN',
-  china: 'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1',
+  official: 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN',
+  china: 'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8',
   proxy: 'https://bing.biturl.top/?resolution=1920&format=json&index=0&mkt=zh-CN'
 }
 
-// 获取今天的日期字符串 (YYYY-MM-DD)
-const getTodayDateString = () => {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+// 默认壁纸（所有获取方式都失败时使用）
+const DEFAULT_WALLPAPER = 'https://www.bing.com/th?id=OHR.CopanRuins_ZH-CN2157795324_1920x1080.jpg'
+
+// 存储键
+const STORAGE_KEYS = {
+  CACHE: 'bing_wallpaper_cache',
+  LOCK: 'bing_wallpaper_lock',
 }
 
-// 从本地存储获取壁纸缓存
+// 获取今天的日期字符串 (YYYY-MM-DD)
+const getTodayDateString = () => new Date().toISOString().split('T')[0]
+
+// 必应 startdate (YYYYMMDD) -> YYYY-MM-DD
+const formatBingDate = (s: string) =>
+  s && s.length === 8 ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}` : getTodayDateString()
+
+// 读取壁纸列表缓存
 const getWallpaperCache = () => {
   try {
-    const cache = localStorage.getItem('bing_wallpaper_cache')
+    const cache = localStorage.getItem(STORAGE_KEYS.CACHE)
     return cache ? JSON.parse(cache) : null
   } catch (error) {
     console.error('读取壁纸缓存失败:', error)
@@ -36,103 +60,153 @@ const getWallpaperCache = () => {
   }
 }
 
-// 保存壁纸到本地存储
-const saveWallpaperCache = (url: string, date: string) => {
+// 保存壁纸列表缓存
+const saveWallpaperCache = (date: string, list: Wallpaper[]) => {
   try {
-    const cache = {
-      url,
-      date,
-      timestamp: Date.now()
-    }
-    localStorage.setItem('bing_wallpaper_cache', JSON.stringify(cache))
+    localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify({ date, timestamp: Date.now(), wallpapers: list }))
   } catch (error) {
     console.error('保存壁纸缓存失败:', error)
   }
 }
 
-// 从必应API获取壁纸
-const fetchBingWallpaper = async () => {
+// 读取锁定信息
+const getLock = (): Wallpaper | null => {
   try {
-    // 优先使用官方API
-    const response = await fetch(BING_API_OPTIONS.official)
-    const data = await response.json()
+    const lock = localStorage.getItem(STORAGE_KEYS.LOCK)
+    return lock ? JSON.parse(lock) : null
+  } catch (error) {
+    console.error('读取壁纸锁定失败:', error)
+    return null
+  }
+}
 
-    // 拼接完整URL
-    let imageUrl = data.images[0].url
-    if (!imageUrl.startsWith('http')) {
-      imageUrl = `https://www.bing.com${imageUrl}`
-    }
+// 保存锁定信息
+const saveLock = (wallpaper: Wallpaper) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOCK, JSON.stringify(wallpaper))
+  } catch (error) {
+    console.error('保存壁纸锁定失败:', error)
+  }
+}
 
-    return imageUrl
+// 清除锁定信息
+const clearLock = () => localStorage.removeItem(STORAGE_KEYS.LOCK)
+
+// 从必应 API 获取最近多天壁纸
+const fetchBingWallpapers = async (): Promise<Wallpaper[]> => {
+  // 官方 API
+  try {
+    const res = await fetch(BING_API_OPTIONS.official)
+    const data = await res.json()
+    return data.images.map((img: any) => ({
+      url: img.url.startsWith('http') ? img.url : `https://www.bing.com${img.url}`,
+      date: formatBingDate(img.startdate),
+    }))
   } catch (error) {
     console.error('必应官方API失败，尝试备用API:', error)
 
-    // 备用方案1：中国区API
+    // 备用方案1：中国区 API
     try {
-      const response = await fetch(BING_API_OPTIONS.china)
-      const data = await response.json()
-      let imageUrl = data.images[0].url
-      if (!imageUrl.startsWith('http')) {
-        imageUrl = `https://cn.bing.com${imageUrl}`
-      }
-      return imageUrl
+      const res = await fetch(BING_API_OPTIONS.china)
+      const data = await res.json()
+      return data.images.map((img: any) => ({
+        url: img.url.startsWith('http') ? img.url : `https://cn.bing.com${img.url}`,
+        date: formatBingDate(img.startdate),
+      }))
     } catch (error2) {
       console.error('中国区API也失败，尝试代理API:', error2)
 
-      // 备用方案2：代理API
-      try {
-        const response = await fetch(BING_API_OPTIONS.proxy)
-        const data = await response.json()
-        return data.url
-      } catch (error3) {
-        console.error('所有API都失败了:', error3)
-        throw new Error('无法获取壁纸')
-      }
+      // 备用方案2：代理 API（仅当天一张，不支持往日切换）
+      const res = await fetch(BING_API_OPTIONS.proxy)
+      const data = await res.json()
+      return [{ url: data.url, date: getTodayDateString() }]
     }
   }
 }
 
-// 获取并更新壁纸
-const fetchAndUpdateWallpaper = async () => {
+// 应用指定索引的壁纸
+const applyWallpaper = (index: number) => {
+  const wp = wallpapers.value[index]
+  if (!wp) return
+  currentIndex.value = index
+  backgroundImageUrl.value = wp.url
+  currentDate.value = wp.date
+}
+
+// 加载壁纸列表（带当天缓存）并显示最新
+const loadWallpapers = async () => {
+  const today = getTodayDateString()
+  const cache = getWallpaperCache()
+
+  // 命中当天缓存，直接使用
+  if (cache && cache.date === today && Array.isArray(cache.wallpapers) && cache.wallpapers.length) {
+    wallpapers.value = cache.wallpapers
+    applyWallpaper(0)
+    return
+  }
+
   try {
-    const wallpaperUrl = await fetchBingWallpaper()
-    const today = getTodayDateString()
-
-    backgroundImageUrl.value = wallpaperUrl
-    saveWallpaperCache(wallpaperUrl, today)
-
-    console.log('今日壁纸链接:', wallpaperUrl)
+    const list = await fetchBingWallpapers()
+    wallpapers.value = list
+    saveWallpaperCache(today, list)
+    applyWallpaper(0)
   } catch (error) {
-    console.error('获取今日壁纸失败:', error)
+    console.error('获取壁纸失败:', error)
 
-    // 获取失败，尝试使用缓存的壁纸
-    const cache = getWallpaperCache()
-    if (cache && cache.url) {
-      backgroundImageUrl.value = cache.url
-      console.log('使用缓存壁纸:', cache.url, '日期:', cache.date)
+    // 获取失败，回退到旧缓存
+    if (cache && Array.isArray(cache.wallpapers) && cache.wallpapers.length) {
+      wallpapers.value = cache.wallpapers
+      applyWallpaper(0)
     } else {
-      console.warn('没有可用的壁纸缓存')
-      // 可以设置一个默认壁纸
-      backgroundImageUrl.value = 'https://www.bing.com/th?id=OHR.CopanRuins_ZH-CN2157795324_1920x1080.jpg'
+      backgroundImageUrl.value = DEFAULT_WALLPAPER
     }
+  }
+}
+
+// 是否可切换到上一天（更早）/ 下一天（更新）——锁定时禁用
+const canPrev = computed(() => !locked.value && currentIndex.value < wallpapers.value.length - 1)
+const canNext = computed(() => !locked.value && currentIndex.value > 0)
+
+// 上一天（更早的壁纸）
+const prevDay = () => {
+  if (canPrev.value) applyWallpaper(currentIndex.value + 1)
+}
+
+// 下一天（更新的壁纸）
+const nextDay = () => {
+  if (canNext.value) applyWallpaper(currentIndex.value - 1)
+}
+
+// 锁定 / 解锁壁纸
+const toggleLock = async () => {
+  if (locked.value) {
+    // 解锁：恢复自动获取最新
+    locked.value = false
+    clearLock()
+    if (!wallpapers.value.length) {
+      await loadWallpapers()
+    }
+  } else {
+    // 锁定当前壁纸
+    if (!backgroundImageUrl.value) return
+    locked.value = true
+    saveLock({ url: backgroundImageUrl.value, date: currentDate.value })
   }
 }
 
 onMounted(async () => {
   document.title = '简单搜索'
-  const today = getTodayDateString()
-  const cache = getWallpaperCache()
 
-  // 检查是否有今天的缓存
-  if (cache && cache.date === today && cache.url) {
-    // 使用今天的缓存
-    backgroundImageUrl.value = cache.url
-    console.log('使用今日缓存壁纸:', cache.url)
-  } else {
-    // 没有今天的缓存，获取最新壁纸
-    console.log('获取今日最新壁纸...')
-    await fetchAndUpdateWallpaper()
+  const lock = getLock()
+  if (lock && lock.url) {
+    // 已锁定：固定显示锁定壁纸，不自动获取最新
+    locked.value = true
+    backgroundImageUrl.value = lock.url
+    currentDate.value = lock.date
+    return
   }
+
+  await loadWallpapers()
 })
 </script>
 
@@ -164,6 +238,47 @@ onMounted(async () => {
 
     <!-- 设置面板 -->
     <SettingsPanel v-model:show="showSettings" />
+
+    <!-- 壁纸控制条 -->
+    <div class="fixed bottom-6 right-6 z-30 flex items-center gap-2">
+      <!-- 当前壁纸日期 -->
+      <span v-if="currentDate"
+        class="px-3 h-9 flex items-center rounded-full bg-white/80 backdrop-blur shadow text-xs text-gray-600 select-none">
+        {{ currentDate }}
+      </span>
+
+      <!-- 切换按钮（锁定时隐藏） -->
+      <template v-if="!locked">
+        <button @click="prevDay" :disabled="!canPrev" title="上一天"
+          class="w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-600 transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button @click="nextDay" :disabled="!canNext" title="下一天"
+          class="w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-600 transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </template>
+
+      <!-- 锁定 / 解锁 -->
+      <button @click="toggleLock" :title="locked ? '解锁壁纸（恢复自动更新）' : '锁定当前壁纸'"
+        class="w-9 h-9 rounded-full backdrop-blur shadow flex items-center justify-center transition-all hover:scale-110"
+        :class="locked ? 'bg-blue-500 text-white' : 'bg-white/80 text-gray-600'">
+        <!-- 已锁定图标 -->
+        <svg v-if="locked" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <!-- 未锁定图标 -->
+        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 11V7a4 4 0 018 0m-4 8v-2m-6 9h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
 
     <!-- 页脚（可选） -->
     <!-- <footer class="mt-auto py-6 text-3 text-[#dddddd]">
