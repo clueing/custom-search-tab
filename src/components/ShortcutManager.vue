@@ -65,11 +65,28 @@ const getFaviconUrl = (url: string, source: 'google' | 'site' = 'google'): strin
     }
 }
 
-// 获取网站标题
+// 解码 HTML 实体（如 &amp; &#39;）
+const decodeHtmlEntities = (text: string): string => {
+    const el = document.createElement('textarea')
+    el.innerHTML = text
+    return el.value
+}
+
+// 获取网页标题：抓取目标网页 HTML 并解析 <title>，失败回退为域名
 const fetchSiteTitle = async (url: string): Promise<string> => {
     try {
-        const domain = new URL(url).hostname
-        return domain.replace('www.', '')
+        const res = await fetch(url)
+        const html = await res.text()
+        // 提取 <title>...</title>，[\s\S] 兼容跨行标题
+        const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+        const title = match?.[1]?.trim()
+        if (title) return decodeHtmlEntities(title)
+    } catch (error) {
+        console.error('获取网页标题失败:', error)
+    }
+    // 抓取失败或无标题时，回退为去掉 www 的域名
+    try {
+        return new URL(url).hostname.replace(/^www\./, '')
     } catch {
         return '未命名'
     }
@@ -99,27 +116,30 @@ const openEditModal = (shortcut?: Shortcut) => {
     showEditModal.value = true
 }
 
-// 自动获取网站信息
+// 自动获取网站信息（图标 + 真实网页标题）
+const fetchingSite = ref(false)
 const autoFetchSiteInfo = async () => {
     if (!form.value.url) return
 
+    fetchingSite.value = true
     try {
         let url = form.value.url
+        // 补全协议头
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             url = 'https://' + url
             form.value.url = url
         }
 
-        const faviconUrl = getFaviconUrl(url)
-        form.value.icon = faviconUrl
+        // 填充图标
+        form.value.icon = getFaviconUrl(url)
         form.value.iconType = 'url'
 
-        if (!form.value.title) {
-            const title = await fetchSiteTitle(url)
-            form.value.title = title
-        }
+        // 主动点击「获取」时抓取真实网页标题并覆盖
+        form.value.title = await fetchSiteTitle(url)
     } catch (error) {
         console.error('获取网站信息失败:', error)
+    } finally {
+        fetchingSite.value = false
     }
 }
 
@@ -283,9 +303,9 @@ onBeforeUnmount(() => {
                                 <div class="flex gap-2">
                                     <input v-model="form.url" type="text" placeholder="https://example.com"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                    <button @click="autoFetchSiteInfo"
-                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                                        获取
+                                    <button @click="autoFetchSiteInfo" :disabled="fetchingSite"
+                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed">
+                                        {{ fetchingSite ? '获取中...' : '获取' }}
                                     </button>
                                 </div>
                             </div>

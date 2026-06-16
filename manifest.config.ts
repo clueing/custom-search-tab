@@ -22,10 +22,9 @@ export default defineManifest({
     default_popup: 'src/popup/index.html',
   },
   host_permissions: [
-    "https://suggestion.baidu.com/*",
-    "https://www.bing.com/*",
-    "https://cn.bing.com/*",
-    "https://bing.biturl.top/*",
+    // 访问任意网站：抓取快捷方式网页标题、搜索建议与必应壁纸
+    "https://*/*",
+    "http://*/*",
   ],
   chrome_url_overrides: {
     newtab: 'src/newtab/index.html',
