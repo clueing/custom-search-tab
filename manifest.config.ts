@@ -3,7 +3,8 @@ import pkg from './package.json'
 
 export default defineManifest({
   manifest_version: 3,
-  name: pkg.name,
+  name: '简单搜索',
+  description: '简约、安全、无广告的新标签页扩展：必应每日壁纸、多搜索引擎切换与快捷方式管理。',
   version: pkg.version,
   icons: {
     16: 'public/logo-16.png',

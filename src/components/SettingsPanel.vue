@@ -3,6 +3,10 @@ import { ref } from 'vue'
 import CloseIcon from '@/assets/icon/IonClose.svg'
 import SearchEngineManager from './settings/SearchEngineManager.vue'
 import GeneralSettings from './settings/GeneralSettings.vue'
+import pkg from '../../package.json'
+
+// 扩展版本号（与 package.json 同步）
+const version = pkg.version
 
 // 定义 props 和 emits
 defineProps<{
@@ -90,7 +94,7 @@ const switchTab = (tab: 'engines' | 'general' | 'about') => {
                             <div class="space-y-4">
                                 <div>
                                     <h3 class="text-lg font-semibold mb-2">简单搜索</h3>
-                                    <p class="text-sm text-gray-600">版本：1.0.0</p>
+                                    <p class="text-sm text-gray-600">版本：{{ version }}</p>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">
