@@ -166,7 +166,7 @@ onUnmounted(() => {
         <form ref="searchFormRef" @submit.prevent="doSearch()"
             class="relative flex items-center h-14 px-4 rounded-2xl bg-white shadow-lg">
             <!-- 引擎选择 -->
-            <button type="button" @click="showDrop = !showDrop"
+            <button type="button" @click="showDrop = !showDrop" aria-label="选择搜索引擎"
                 class="flex items-center gap-2 mr-3 outline-none bg-white hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors">
                 <img :src="currentEngine.icon" class="w-6 h-6 object-contain" draggable="false" />
                 <svg :class="['w-4 h-4 text-gray-500 transition-transform duration-200', showDrop ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +179,7 @@ onUnmounted(() => {
                 <input v-model="keyword" type="text" placeholder="输入并搜索" @keydown="handleKeydown"
                     @focus="keyword.trim() && suggestions.length > 0 && (showSuggestions = true)"
                     class="w-full h-full outline-none bg-transparent" />
-                <button v-if="keyword" type="button"
+                <button v-if="keyword" type="button" aria-label="清空"
                     @click="keyword = ''; suggestions = []; showSuggestions = false; selectedIndex = -1"
                     class="bg-white absolute right-0 top-0 h-full px-2 text-gray-400 hover:text-gray-700">
                     <img class="w-5 h-5" :src="CloseIcon" alt="×" />

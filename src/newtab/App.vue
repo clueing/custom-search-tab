@@ -212,7 +212,7 @@ onMounted(async () => {
     <div class="absolute inset-0 bg-black/25 z-10"></div>
 
     <!-- 右上角设置按钮 -->
-    <button @click="showSettings = true" title="设置"
+    <button @click="showSettings = true" title="设置" aria-label="设置"
       class="fixed top-6 right-6 z-30 w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow hover:shadow-lg hover:scale-110 transition-all flex items-center justify-center group">
       <svg class="w-5 h-5 text-gray-600 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -251,13 +251,13 @@ onMounted(async () => {
 
       <!-- 切换按钮（锁定时隐藏） -->
       <template v-if="showControls && !locked">
-        <button @click="prevDay" :disabled="!canPrev" title="上一天"
+        <button @click="prevDay" :disabled="!canPrev" title="上一天" aria-label="上一天"
           class="w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-600 transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <button @click="nextDay" :disabled="!canNext" title="下一天"
+        <button @click="nextDay" :disabled="!canNext" title="下一天" aria-label="下一天"
           class="w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-600 transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -267,6 +267,7 @@ onMounted(async () => {
 
       <!-- 锁定 / 解锁 -->
       <button v-if="showControls" @click="toggleLock" :title="locked ? '解锁壁纸（恢复自动更新）' : '锁定当前壁纸'"
+        :aria-label="locked ? '解锁壁纸' : '锁定壁纸'"
         class="w-9 h-9 rounded-full backdrop-blur shadow flex items-center justify-center transition-all hover:scale-110"
         :class="locked ? 'bg-blue-500 text-white' : 'bg-white/80 text-gray-600'">
         <!-- 已锁定图标 -->

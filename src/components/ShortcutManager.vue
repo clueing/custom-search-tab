@@ -347,6 +347,11 @@ onBeforeUnmount(() => {
             </li>
         </ul>
 
+        <!-- 右键操作提示 -->
+        <p v-if="shortcuts.length" class="mt-6 text-center text-xs text-white/50 select-none">
+            提示：右键快捷方式可编辑或删除
+        </p>
+
         <!-- 编辑对话框 -->
         <Teleport to="body">
             <Transition name="modal">
