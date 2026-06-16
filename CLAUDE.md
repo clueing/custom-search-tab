@@ -43,17 +43,24 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 
 **源码目录 (`src/`):**
 - `newtab/` - **新标签页入口**（主要功能页面）
-  - `App.vue` - 主组件，包含必应壁纸获取、缓存逻辑
+  - `App.vue` - 主组件，包含必应壁纸获取、缓存逻辑、设置入口
   - `index.html` - HTML 入口
   - `main.ts` - Vue 应用挂载
 - `components/` - 共享组件
   - `SearchBar.vue` - 搜索栏组件（多引擎切换、搜索建议、键盘导航）
   - `ShortcutManager.vue` - 快捷方式管理（增删改查、右键编辑、localStorage 持久化）
+  - `SettingsPanel.vue` - 设置面板容器（侧滑动画、Tab 切换）
+  - `settings/` - 设置相关组件
+    - `SearchEngineManager.vue` - 搜索引擎管理
+    - `SearchEngineForm.vue` - 添加/编辑引擎表单
+    - `GeneralSettings.vue` - 通用设置（搜索建议开关）
+- `composables/` - 状态管理
+  - `useSearchEngines.ts` - 搜索引擎状态管理（增删改查、localStorage 持久化）
 - `popup/` - 工具栏点击弹出面板（当前已注释，未启用）
-- `sidepanel/` - 侧边栏面板
+- `sidepanel/` - 侧边栏面板（未使用）
 - `content/` - 内容脚本（页面悬浮球，当前已注释，未启用）
 - `types/` - TypeScript 类型定义
-  - `search.ts` - `SearchEngine` 接口定义
+  - `search.ts` - `SearchEngine` 和 `SearchEngineData` 接口定义
 - `assets/` - 静态资源（图标、SVG）
 
 **扩展页面映射（manifest.config.ts）:**
@@ -70,11 +77,32 @@ pnpm run build      # 生产环境构建（TypeScript 类型检查 + Vite 构建
 - 缓存数据结构：`{ url: string, date: string, timestamp: number }`
 - 每日首次加载时自动获取最新壁纸并更新缓存
 
-**搜索功能 (`SearchBar.vue`):**
-- 支持必应、谷歌、百度三种搜索引擎
+**搜索功能 (`SearchBar.vue` + `useSearchEngines.ts`):**
+- 使用 Composable 模式管理搜索引擎状态
+- 支持预设引擎（必应、谷歌、百度）+ 用户自定义引擎
+- 搜索引擎数据结构：`SearchEngineData`（存储层，使用模板字符串）和 `SearchEngine`（运行时层，带函数）
+- localStorage 持久化（key: `search_engines`, `active_engine_id`, `suggest_enabled`）
 - 搜索建议使用百度 JSONP API，300ms 防抖优化
+- 支持搜索建议开关（关闭后可提升隐私）
 - 键盘导航：上下箭头选择建议、Enter 确认、Escape 关闭
 - 点击外部自动关闭下拉菜单和建议列表
+
+**设置面板 (`SettingsPanel.vue`):**
+- 右上角齿轮按钮触发
+- 侧边滑出动画（从右侧滑入，200ms ease-out）
+- 三个 Tab：搜索引擎管理、通用设置、关于
+- 半透明遮罩 + 白色面板
+
+**搜索引擎管理 (`SearchEngineManager.vue` + `SearchEngineForm.vue`):**
+- 展示所有搜索引擎（预设 + 自定义）
+- 支持切换当前使用的引擎
+- 支持添加/编辑/删除自定义引擎（预设引擎不可删除）
+- 添加表单包含：
+  - 常用引擎模板库（DuckDuckGo、搜狗、360搜索、Yandex）
+  - 手动填写：名称、URL 模板（含 `{keyword}` 占位符）、图标 URL
+  - 表单验证：名称长度、URL 格式、必须包含 `{keyword}`
+  - 自动获取 favicon 功能
+  - 实时预览
 
 **快捷方式 (`ShortcutManager.vue`):**
 - localStorage 持久化（key: `shortcuts`）
