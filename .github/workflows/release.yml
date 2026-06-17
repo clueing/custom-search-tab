@@ -36,20 +36,25 @@ jobs:
             echo "Release v${{ steps.version.outputs.version }} 不存在，开始构建发布"
           fi
 
+      - name: 安装 pnpm
+        if: steps.check.outputs.exists == 'false'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: 安装 Node
         if: steps.check.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: 安装依赖
         if: steps.check.outputs.exists == 'false'
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: 构建
         if: steps.check.outputs.exists == 'false'
-        run: npm run build
+        run: pnpm build
 
       - name: 创建 Release 并上传构建产物
         if: steps.check.outputs.exists == 'false'
