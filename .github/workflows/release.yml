@@ -56,11 +56,63 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         run: pnpm build
 
+      - name: 生成 Release Notes
+        if: steps.check.outputs.exists == 'false'
+        id: release_notes
+        run: |
+          VERSION="v${{ steps.version.outputs.version }}"
+
+          # 获取上一个 tag（首次发布则用第一个 commit）
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+
+          # 提取两个版本间的 commits（格式：commit_hash|commit_message）
+          COMMITS=$(git log $PREV_TAG..HEAD --pretty=format:"%H|%s" --no-merges)
+
+          # 分类 commits
+          FEAT=$(echo "$COMMITS" | grep -i "^[^|]*|feat" || true)
+          FIX=$(echo "$COMMITS" | grep -i "^[^|]*|fix" || true)
+          CHORE=$(echo "$COMMITS" | grep -iE "^[^|]*|(chore|ci|build|refactor|perf|style|docs)" || true)
+
+          # 生成 Release Notes
+          {
+            echo "## 🎉 版本 $VERSION"
+            echo ""
+
+            if [ -n "$FEAT" ]; then
+              echo "### ✨ 新增功能"
+              echo "$FEAT" | while IFS='|' read hash msg; do
+                echo "- $msg ([${hash:0:7}](https://github.com/${{ github.repository }}/commit/$hash))"
+              done
+              echo ""
+            fi
+
+            if [ -n "$FIX" ]; then
+              echo "### 🐛 Bug 修复"
+              echo "$FIX" | while IFS='|' read hash msg; do
+                echo "- $msg ([${hash:0:7}](https://github.com/${{ github.repository }}/commit/$hash))"
+              done
+              echo ""
+            fi
+
+            if [ -n "$CHORE" ]; then
+              echo "### 🔧 构建与配置"
+              echo "$CHORE" | while IFS='|' read hash msg; do
+                echo "- $msg ([${hash:0:7}](https://github.com/${{ github.repository }}/commit/$hash))"
+              done
+              echo ""
+            fi
+
+            echo "---"
+            echo "**完整变更**: https://github.com/${{ github.repository }}/compare/$PREV_TAG...$VERSION"
+          } > release_notes.md
+
+          cat release_notes.md
+
       - name: 创建 Release 并上传构建产物
         if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          body_path: release_notes.md
           files: release/*.zip
