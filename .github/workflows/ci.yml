@@ -16,19 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 安装 pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8
-
       - name: 安装 Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          # 不使用 setup-node 的 pnpm cache（与 pnpm 9 不兼容），依赖 pnpm/action-setup 内置缓存
+          cache: npm
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: 构建
-        run: pnpm build
+        run: npm run build
