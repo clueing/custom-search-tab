@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          # 不使用 setup-node 的 pnpm cache（与 pnpm 9 不兼容），依赖 pnpm/action-setup 内置缓存
 
       - name: 安装依赖
         if: steps.check.outputs.exists == 'false'
